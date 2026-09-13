@@ -254,6 +254,18 @@ class DehumidifierDevice:
         return self.is_on and not self._pause_active and (self._manual_active or self.auto_request)
 
     def _update_auto_request(self) -> None:
+        """Керування вентилятором за поточною вологістю.
+
+        Асиметричний гістерезис, як просив користувач:
+        - УВІМКНУТИ, щойно вологість досягає цільової (>=) - без додаткового
+          запасу зверху, реагуємо одразу.
+        - ВИМКНУТИ лише коли вологість опуститься нижче цільової на
+          dry_tolerance ("гістерезис" в Options) - запас знизу потрібен,
+          щоб не клацати реле щоразу, як вологість на мить торкнеться цілі.
+
+        Anti short-cycle нижче все одно захищає від деренчання, навіть
+        без запасу зверху.
+        """
         if not self.is_on:
             self.auto_request = False
             return
@@ -262,7 +274,7 @@ class DehumidifierDevice:
             return
 
         desired = self.auto_request
-        if current > self.target_humidity + self.dry_tolerance:
+        if current >= self.target_humidity:
             desired = True
         elif current <= self.target_humidity - self.dry_tolerance:
             desired = False
