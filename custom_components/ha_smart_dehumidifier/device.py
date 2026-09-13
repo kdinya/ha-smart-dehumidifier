@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import logging
 import math
+import time
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Event, HomeAssistant, callback
@@ -54,6 +55,12 @@ _LOGGER = logging.getLogger(__name__)
 
 SIGNAL_UPDATE = f"{DOMAIN}_update_{{}}"
 
+# Мінімальний інтервал між авто-перемиканнями auto_request (гістерезису
+# самого по собі не завжди досить: якщо показник вологості чи ціль (у
+# авто-режимі ціль постійно синхронізується з рекомендованою вологістю)
+# коливаються біля межі +-dry_tolerance, реле може клацати щосекунди).
+MIN_AUTO_CYCLE_SECONDS = 90
+
 
 def _clamp(value: float, low: float, high: float) -> float:
     return max(low, min(high, value))
@@ -76,6 +83,7 @@ class DehumidifierDevice:
         self._unsub_manual = None
         self._unsub_pause = None
         self._unsub_listeners: list = []
+        self._last_auto_request_change = 0.0
 
         self.reload_options()
 
@@ -189,10 +197,25 @@ class DehumidifierDevice:
         current = self.current_humidity()
         if current is None:
             return
+
+        desired = self.auto_request
         if current > self.target_humidity + self.dry_tolerance:
-            self.auto_request = True
+            desired = True
         elif current <= self.target_humidity - self.dry_tolerance:
-            self.auto_request = False
+            desired = False
+
+        if desired == self.auto_request:
+            return
+
+        # Anti short-cycle: не даємо реле клацати частіше, ніж раз на
+        # MIN_AUTO_CYCLE_SECONDS, навіть якщо вологість/ціль смикаються
+        # прямо на межі гістерезису.
+        now = time.monotonic()
+        if now - self._last_auto_request_change < MIN_AUTO_CYCLE_SECONDS:
+            return
+
+        self.auto_request = desired
+        self._last_auto_request_change = now
 
     def recompute(self) -> None:
         self._update_auto_request()
