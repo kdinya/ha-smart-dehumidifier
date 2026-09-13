@@ -188,18 +188,32 @@ class MyDehumidifierCard extends LitElement {
 
     .dh-frame {
       width: min(100cqi, calc(100cqb * var(--dh-frame-ar-num, 1)), var(--dh-frame-max-width, 400px));
-      aspect-ratio: var(--dh-frame-ar, 1);
-      container-type: inline-size;
       position: relative;
       z-index: 1;
       flex: 0 0 auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .dh-frame-aspect {
+      width: 100%;
+      aspect-ratio: var(--dh-frame-ar, 1);
+      container-type: inline-size;
+      position: relative;
+      flex: 0 0 auto;
+    }
+
+    .dh-frame-bottom-spacer {
+      flex: 0 0 auto;
+      width: 100%;
+      height: var(--dh-pad-bottom, 16px);
     }
 
     .dh-scene {
       position: absolute;
       inset: 0;
       box-sizing: border-box;
-      padding: var(--dh-pad-top, 40px) var(--dh-pad-right, 14px) var(--dh-pad-bottom, 16px) var(--dh-pad-left, 14px);
+      padding: var(--dh-pad-top, 40px) var(--dh-pad-right, 14px) 0 var(--dh-pad-left, 14px);
       overflow: visible;
     }
 
@@ -449,15 +463,24 @@ class MyDehumidifierCard extends LitElement {
     const controlsMax = toPositiveNumber(config.controls_max_width, 520);
     const curMax = toPositiveNumber(config.cur_max_width, 400);
     const heightPercent = toPositiveNumber(config.card_height_percent, DEFAULT_HEIGHT_PERCENT);
-    // Нижній відступ (content_padding_bottom) має РЕАЛЬНО додавати місце
-    // знизу (і збільшувати загальну висоту картки), а не просто стискати
-    // контент всередині незмінної за розміром рамки. Рамка (.dh-frame) і,
-    // на вузьких екранах, сама ha-card використовують той самий frameRatio,
-    // тож додаємо відступ як еквівалентний приріст висоти саме тут.
+    // .dh-frame-aspect (вміст) зберігає ЧИСТИЙ, незмінний aspect-ratio -
+    // саме він задіяний у формулі ШИРИНИ рамки (calc(100cqb * ...)), тож
+    // домішувати туди піксельний відступ не можна - це зсуває ширину й
+    // ламає центрування на вузьких екранах. Замість цього нижній відступ
+    // реалізовано окремим блоком-спейсером (.dh-frame-bottom-spacer) під
+    // .dh-frame-aspect - він додає РЕАЛЬНУ висоту знизу, не чіпаючи ширину.
+    const frameRatioNum = 100 / heightPercent;
+    const frameRatio = `100 / ${heightPercent}`;
+
+    // На вузьких екранах ha-card бере той самий frameRatio, що й рамка
+    // (--dh-glass-ar-mobile), тож щоб спейсер не обрізався overflow:hidden
+    // картки, тут і лише тут додаємо еквівалент нижнього відступу до
+    // висоти самої ha-card (глядачу не видно різниці - просто немає обрізання).
     const padBottomPx = toFiniteNumber(config.content_padding_bottom, 16);
     const extraHeightPercent = layoutBaseWidth > 0 ? (padBottomPx / layoutBaseWidth) * 100 : 0;
-    const effectiveHeightPercent = heightPercent + extraHeightPercent;
-    const frameRatioNum = 100 / effectiveHeightPercent;
+    const glassMobileHeightPercent = heightPercent + extraHeightPercent;
+    const glassMobileRatio = `100 / ${glassMobileHeightPercent}`;
+
     const glassRatio = toPositiveNumber(config.glass_aspect_ratio, 1.8);
     const align = normalizeAlign(config.alignment);
 
@@ -473,7 +496,8 @@ class MyDehumidifierCard extends LitElement {
       controlsMax,
       curMax,
       frameRatioNum,
-      frameRatio: `100 / ${effectiveHeightPercent}`,
+      frameRatio,
+      glassMobileRatio,
       glassRatio: String(glassRatio),
       alignClass: `align-${align}`,
       justifyContent,
@@ -530,7 +554,7 @@ class MyDehumidifierCard extends LitElement {
     const cardStyle = `
       --dh-card-radius: ${layout.borderRadius}px;
       --dh-glass-max-width: ${layout.glassMaxWidth}px;
-      --dh-glass-ar-mobile: ${layout.frameRatio};
+      --dh-glass-ar-mobile: ${layout.glassMobileRatio};
       --dh-glass-ar-wide: ${layout.glassRatio};
       --dh-justify: ${layout.justifyContent};
     `;
@@ -567,11 +591,14 @@ class MyDehumidifierCard extends LitElement {
         </button>
 
         <div class="dh-frame ${layout.alignClass}" style="${frameStyle}">
-          <div class="dh-scene">
-            <div class="dh-device">
-              ${this._renderSceneContent()}
+          <div class="dh-frame-aspect">
+            <div class="dh-scene">
+              <div class="dh-device">
+                ${this._renderSceneContent()}
+              </div>
             </div>
           </div>
+          <div class="dh-frame-bottom-spacer"></div>
         </div>
       </ha-card>
 
