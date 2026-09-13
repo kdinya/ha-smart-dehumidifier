@@ -19,7 +19,7 @@ CONF_DRY_TOLERANCE = "dry_tolerance"
 CONF_MANUAL_RUNTIME = "manual_runtime"
 CONF_MANUAL_PAUSE = "manual_pause"
 
-DEFAULT_DELTA = 3.75  # відсоткові пункти понад вологість сусідньої кімнати
+DEFAULT_DELTA = 3.75  # % (відносний режим) або г/м3 (абсолютний режим, обидва датчики температури) - обирається автоматично
 DEFAULT_MIN_HUMIDITY = 65
 DEFAULT_MAX_HUMIDITY = 85
 DEFAULT_DRY_TOLERANCE = 5

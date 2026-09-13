@@ -20,7 +20,7 @@
       "init": {
         "title": "Calculation & timer settings",
         "data": {
-          "delta": "Humidity delta vs adjacent room, %",
+          "delta": "Humidity delta vs adjacent room (% or g/m³, depends on temperature sensors)",
           "min_humidity": "Minimum recommended humidity, %",
           "max_humidity": "Maximum recommended humidity, %",
           "dry_tolerance": "Hysteresis tolerance, %",

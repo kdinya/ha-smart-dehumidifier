@@ -77,11 +77,16 @@ class DeltaNumber(_BaseNumber):
     _attr_native_min_value = 0
     _attr_native_max_value = 10
     _attr_native_step = 0.1
-    _attr_native_unit_of_measurement = "%"
     _device_attribute = "delta"
 
     def __init__(self, device: DehumidifierDevice, entry: ConfigEntry) -> None:
         super().__init__(device, entry, "delta")
+
+    @property
+    def native_unit_of_measurement(self) -> str:
+        # Автоматично: якщо в пристрою налаштовано обидва датчики температури -
+        # дельта в абсолютній вологості (г/м3), інакше - у відсоткових пунктах.
+        return "g/m³" if self._device.uses_absolute_humidity else "%"
 
 
 class MinHumidityNumber(_BaseNumber):

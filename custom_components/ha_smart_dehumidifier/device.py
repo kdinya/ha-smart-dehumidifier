@@ -150,6 +150,16 @@ class DehumidifierDevice:
 
     # ------------------------------------------------------- recommendation
 
+    @property
+    def uses_absolute_humidity(self) -> bool:
+        """True, якщо в обох кімнатах налаштовано датчики температури.
+
+        В цьому режимі дельта - в абсолютних одиницях (г/м3) і додається
+        ДО перерахунку у відсотки. Без обох датчиків температури дельта -
+        у відсоткових пунктах (стара поведінка, пряме порівняння %).
+        """
+        return bool(self.room_temp_entity and self.neighbor_temp_entity)
+
     def _read_float(self, entity_id: str | None) -> float | None:
         if not entity_id:
             return None
@@ -182,17 +192,18 @@ class DehumidifierDevice:
     def recommended_humidity(self) -> int | None:
         """Рекомендована (цільова) відносна вологість для кімнати з осушувачем.
 
-        Порівняння ведеться в абсолютній вологості (г/м3) - вона не залежить
-        від температури, тож коректно відображає реальну кількість вологи в
-        повітрі обох кімнат. Якщо в обох кімнатах налаштовано датчики
-        температури: беремо абсолютну вологість сусідньої кімнати і
-        перераховуємо, скільки відсотків відносної вологості це дало б у
-        кімнаті з осушувачем (за її власною температурою), і вже до цього
-        результату додаємо дельту.
+        Автоматичний вибір режиму порівняння - залежно від того, чи
+        налаштовано ОБИДВА датчики температури (своєї і сусідньої кімнати):
 
-        Якщо хоч один датчик температури не налаштовано - працюємо по-старому
-        (пряме порівняння відсотків + дельта), для сумісності з попередніми
-        конфігураціями пристрою.
+        - Є обидва датчики температури (uses_absolute_humidity=True):
+          порівняння і дельта - в абсолютній вологості (г/м3), яка не
+          залежить від температури і коректно відображає реальну кількість
+          вологи в повітрі. Беремо абсолютну вологість сусідньої кімнати,
+          додаємо дельту (г/м3) - і вже цю суму перераховуємо в еквівалентні
+          відсотки відносної вологості для температури кімнати з осушувачем.
+        - Немає хоча б одного датчика температури: стара поведінка - пряме
+          порівняння відсотків, дельта у відсоткових пунктах (вологість
+          сусідньої кімнати + дельта).
 
         Ліміти min/max застосовуються лише коли увімкнено авто-режим.
         Коли авто-режим вимкнено - ліміти ігноруються (результат лише
@@ -202,17 +213,15 @@ class DehumidifierDevice:
         if neighbor_humidity is None:
             return None
 
-        neighbor_temp = self.neighbor_temp()
-        room_temp = self.room_temp()
-
-        if neighbor_temp is not None and room_temp is not None:
-            neighbor_abs = humidity_math.absolute_humidity(neighbor_humidity, neighbor_temp)
-            equivalent_rh = humidity_math.relative_humidity_from_absolute(neighbor_abs, room_temp)
-            base = equivalent_rh if equivalent_rh is not None else neighbor_humidity
+        if self.uses_absolute_humidity:
+            neighbor_abs = humidity_math.absolute_humidity(neighbor_humidity, self.neighbor_temp())
+            equivalent_rh = None
+            if neighbor_abs is not None:
+                target_abs = max(0.0, neighbor_abs + self.delta)
+                equivalent_rh = humidity_math.relative_humidity_from_absolute(target_abs, self.room_temp())
+            result = equivalent_rh if equivalent_rh is not None else (neighbor_humidity + self.delta)
         else:
-            base = neighbor_humidity
-
-        result = base + self.delta
+            result = neighbor_humidity + self.delta
 
         if self.auto_mode:
             result = _clamp(result, self.min_humidity, self.max_humidity)
