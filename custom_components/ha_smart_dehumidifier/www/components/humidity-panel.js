@@ -168,12 +168,24 @@ function handleAutoButtonClick(card, config, autoEnabled) {
   }
 
   setAutoEnabled(card, config, true);
-  
-  // МИТТЄВИЙ СТРИБОК: Одразу переводимо цифри і повзунок на авто-рекомендацію
+
+  // МИТТЄВИЙ СТРИБОК: Одразу переводимо цифри і повзунок на авто-рекомендацію.
+  // ВАЖЛИВО: sensor.recommended_humidity() на бекенді щойно (після
+  // увімкнення авто-режиму) перерахується з урахуванням меж min/max
+  // рекомендованої вологості. Але значення, яке ми читаємо тут з
+  // calc_entity, - це ще СТАРЕ значення (вологість-до-увімкнення авто),
+  // яке було затиснуте лише в 0-100%, а не в min/max. Якщо це не
+  // врахувати, панель "Ціль" на мить покаже інше число, ніж бейдж "Авто",
+  // доки не прийде реальний стан з сервера (до 1.8с) - тому клампимо тут
+  // так само, як це зробить бекенд.
   const calcEntity = config.calc_entity || 'sensor.recommended_humidity';
   const recommendedRh = readNumberState(card, calcEntity);
   if (Number.isFinite(recommendedRh)) {
-    card._targetHumidity = Math.round(clamp(recommendedRh, 0, 100));
+    const minRh = readNumberState(card, config.min_rh_entity);
+    const maxRh = readNumberState(card, config.max_rh_entity);
+    const lowerBound = Number.isFinite(minRh) ? minRh : 0;
+    const upperBound = Number.isFinite(maxRh) ? maxRh : 100;
+    card._targetHumidity = Math.round(clamp(recommendedRh, lowerBound, upperBound));
     card._ignoreStateUntil = Date.now() + 1800;
   }
 

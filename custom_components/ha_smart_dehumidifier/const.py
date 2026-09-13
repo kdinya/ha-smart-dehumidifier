@@ -6,6 +6,12 @@ CONF_FAN_ENTITY = "fan_entity"
 CONF_CURRENT_HUMIDITY_ENTITY = "current_humidity_entity"
 CONF_ABS_HUMIDITY_ENTITY = "abs_humidity_entity"
 
+# Датчики температури, потрібні для коректного перерахунку відносної
+# вологості в абсолютну (г/м3) і назад - порівняння між кімнатами
+# ведеться в абсолютній вологості, користувачу завжди показується відносна.
+CONF_ROOM_TEMP_ENTITY = "room_temp_entity"
+CONF_NEIGHBOR_TEMP_ENTITY = "neighbor_temp_entity"
+
 CONF_DELTA = "delta"
 CONF_MIN_HUMIDITY = "min_humidity"
 CONF_MAX_HUMIDITY = "max_humidity"

@@ -22,6 +22,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later, async_track_state_change_event
 from homeassistant.util import slugify
 
+from . import humidity_math
 from .const import (
     CONF_ABS_HUMIDITY_ENTITY,
     CONF_CURRENT_HUMIDITY_ENTITY,
@@ -32,6 +33,8 @@ from .const import (
     CONF_MANUAL_RUNTIME,
     CONF_MAX_HUMIDITY,
     CONF_MIN_HUMIDITY,
+    CONF_NEIGHBOR_TEMP_ENTITY,
+    CONF_ROOM_TEMP_ENTITY,
     DEFAULT_DELTA,
     DEFAULT_DRY_TOLERANCE,
     DEFAULT_MANUAL_PAUSE,
@@ -94,6 +97,8 @@ class DehumidifierDevice:
         self.fan_entity = data.get(CONF_FAN_ENTITY)
         self.current_humidity_entity = data.get(CONF_CURRENT_HUMIDITY_ENTITY)
         self.abs_humidity_entity = data.get(CONF_ABS_HUMIDITY_ENTITY)
+        self.room_temp_entity = data.get(CONF_ROOM_TEMP_ENTITY)
+        self.neighbor_temp_entity = data.get(CONF_NEIGHBOR_TEMP_ENTITY)
 
         self.delta = float(options.get(CONF_DELTA, DEFAULT_DELTA))
         self.min_humidity = int(options.get(CONF_MIN_HUMIDITY, DEFAULT_MIN_HUMIDITY))
@@ -119,7 +124,13 @@ class DehumidifierDevice:
         if rec is not None:
             self.target_humidity = rec
 
-        for entity_id in (self.abs_humidity_entity, self.current_humidity_entity):
+        watched_entities = (
+            self.abs_humidity_entity,
+            self.current_humidity_entity,
+            self.room_temp_entity,
+            self.neighbor_temp_entity,
+        )
+        for entity_id in watched_entities:
             if entity_id:
                 self._unsub_listeners.append(
                     async_track_state_change_event(self.hass, entity_id, self._async_source_changed)
@@ -139,23 +150,69 @@ class DehumidifierDevice:
 
     # ------------------------------------------------------- recommendation
 
+    def _read_float(self, entity_id: str | None) -> float | None:
+        if not entity_id:
+            return None
+        state = self.hass.states.get(entity_id)
+        if state is None:
+            return None
+        try:
+            return float(state.state)
+        except (TypeError, ValueError):
+            return None
+
+    def neighbor_humidity(self) -> float | None:
+        """Відносна вологість сусідньої (референтної) кімнати, як є з датчика, %."""
+        return self._read_float(self.abs_humidity_entity)
+
+    def neighbor_temp(self) -> float | None:
+        return self._read_float(self.neighbor_temp_entity)
+
+    def room_temp(self) -> float | None:
+        return self._read_float(self.room_temp_entity)
+
+    def absolute_humidity_neighbor(self) -> float | None:
+        """Абсолютна вологість сусідньої кімнати, г/м3 (потребує датчик температури)."""
+        return humidity_math.absolute_humidity(self.neighbor_humidity(), self.neighbor_temp())
+
+    def absolute_humidity_room(self) -> float | None:
+        """Абсолютна вологість кімнати з осушувачем, г/м3 (потребує датчик температури)."""
+        return humidity_math.absolute_humidity(self.current_humidity(), self.room_temp())
+
     def recommended_humidity(self) -> int | None:
-        """Рекомендована вологість = вологість сусідньої кімнати + дельта.
+        """Рекомендована (цільова) відносна вологість для кімнати з осушувачем.
+
+        Порівняння ведеться в абсолютній вологості (г/м3) - вона не залежить
+        від температури, тож коректно відображає реальну кількість вологи в
+        повітрі обох кімнат. Якщо в обох кімнатах налаштовано датчики
+        температури: беремо абсолютну вологість сусідньої кімнати і
+        перераховуємо, скільки відсотків відносної вологості це дало б у
+        кімнаті з осушувачем (за її власною температурою), і вже до цього
+        результату додаємо дельту.
+
+        Якщо хоч один датчик температури не налаштовано - працюємо по-старому
+        (пряме порівняння відсотків + дельта), для сумісності з попередніми
+        конфігураціями пристрою.
 
         Ліміти min/max застосовуються лише коли увімкнено авто-режим.
         Коли авто-режим вимкнено - ліміти ігноруються (результат лише
         затиснутий у фізично можливих межах 0-100%).
         """
-        neighbor_state = self.hass.states.get(self.abs_humidity_entity) if self.abs_humidity_entity else None
-        if neighbor_state is None:
+        neighbor_humidity = self.neighbor_humidity()
+        if neighbor_humidity is None:
             return None
 
-        try:
-            neighbor_humidity = float(neighbor_state.state)
-        except (TypeError, ValueError):
-            return None
+        neighbor_temp = self.neighbor_temp()
+        room_temp = self.room_temp()
 
-        result = neighbor_humidity + self.delta
+        if neighbor_temp is not None and room_temp is not None:
+            neighbor_abs = humidity_math.absolute_humidity(neighbor_humidity, neighbor_temp)
+            equivalent_rh = humidity_math.relative_humidity_from_absolute(neighbor_abs, room_temp)
+            base = equivalent_rh if equivalent_rh is not None else neighbor_humidity
+        else:
+            base = neighbor_humidity
+
+        result = base + self.delta
 
         if self.auto_mode:
             result = _clamp(result, self.min_humidity, self.max_humidity)
@@ -165,13 +222,7 @@ class DehumidifierDevice:
         return int(round(result))
 
     def current_humidity(self) -> float | None:
-        state = self.hass.states.get(self.current_humidity_entity) if self.current_humidity_entity else None
-        if state is None:
-            return None
-        try:
-            return float(state.state)
-        except (TypeError, ValueError):
-            return None
+        return self._read_float(self.current_humidity_entity)
 
     # -------------------------------------------------------- state machine
 

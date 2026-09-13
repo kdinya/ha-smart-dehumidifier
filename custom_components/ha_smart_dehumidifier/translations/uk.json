@@ -8,7 +8,9 @@
           "name": "Назва",
           "fan_entity": "Вимикач вентилятора",
           "current_humidity_entity": "Датчик вологості (кімната з осушувачем)",
-          "abs_humidity_entity": "Датчик вологості (сусідня кімната), %"
+          "abs_humidity_entity": "Датчик вологості (сусідня кімната), %",
+          "room_temp_entity": "Датчик температури (кімната з осушувачем)",
+          "neighbor_temp_entity": "Датчик температури (сусідня кімната)"
         }
       }
     }
@@ -31,7 +33,9 @@
   "entity": {
     "sensor": {
       "status": { "name": "Статус" },
-      "recommended_humidity": { "name": "Рекомендована вологість" }
+      "recommended_humidity": { "name": "Рекомендована вологість" },
+      "absolute_humidity_room": { "name": "Абсолютна вологість (кімната)" },
+      "absolute_humidity_neighbor": { "name": "Абсолютна вологість (сусідня кімната)" }
     },
     "switch": {
       "auto_mode": { "name": "Авто режим" }

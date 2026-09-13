@@ -8,7 +8,9 @@
           "name": "Name",
           "fan_entity": "Fan switch",
           "current_humidity_entity": "Humidity sensor (dehumidifier room)",
-          "abs_humidity_entity": "Humidity sensor (adjacent room), %"
+          "abs_humidity_entity": "Humidity sensor (adjacent room), %",
+          "room_temp_entity": "Temperature sensor (dehumidifier room)",
+          "neighbor_temp_entity": "Temperature sensor (adjacent room)"
         }
       }
     }
@@ -35,6 +37,12 @@
       },
       "recommended_humidity": {
         "name": "Recommended humidity"
+      },
+      "absolute_humidity_room": {
+        "name": "Absolute humidity (room)"
+      },
+      "absolute_humidity_neighbor": {
+        "name": "Absolute humidity (adjacent room)"
       }
     },
     "switch": {

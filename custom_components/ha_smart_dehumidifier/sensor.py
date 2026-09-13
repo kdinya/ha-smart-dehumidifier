@@ -1,7 +1,7 @@
-"""Sensor platform: status text sensor + recommended humidity sensor."""
+"""Sensor platform: status text sensor + recommended/absolute humidity sensors."""
 from __future__ import annotations
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -20,6 +20,8 @@ async def async_setup_entry(
         [
             DehumidifierStatusSensor(device, entry),
             DehumidifierRecommendedHumiditySensor(device, entry),
+            DehumidifierAbsoluteHumidityRoomSensor(device, entry),
+            DehumidifierAbsoluteHumidityNeighborSensor(device, entry),
         ]
     )
 
@@ -71,3 +73,45 @@ class DehumidifierRecommendedHumiditySensor(_BaseSensor):
     @property
     def native_value(self) -> int | None:
         return self._device.recommended_humidity()
+
+
+class _AbsoluteHumiditySensor(_BaseSensor):
+    """Абсолютна вологість, г/м3 - для порівняння кімнат незалежно від температури.
+
+    Показується як діагностика: користувачу в картці/панелях завжди
+    відображається відносна вологість (%), ця сутність - лише для звірки
+    (наприклад, у графіках чи автоматизаціях, де потрібна абсолютна
+    вологість замість відносної).
+    """
+
+    _attr_native_unit_of_measurement = "g/m³"
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_icon = "mdi:water"
+    _attr_entity_category = None
+    _attr_suggested_display_precision = 1
+
+
+class DehumidifierAbsoluteHumidityRoomSensor(_AbsoluteHumiditySensor):
+    _attr_translation_key = "absolute_humidity_room"
+
+    def __init__(self, device: DehumidifierDevice, entry: ConfigEntry) -> None:
+        super().__init__(device, entry)
+        self._attr_unique_id = f"{entry.entry_id}_absolute_humidity_room"
+        self._attr_suggested_object_id = f"{device.slug}_absolute_humidity_room"
+
+    @property
+    def native_value(self) -> float | None:
+        return self._device.absolute_humidity_room()
+
+
+class DehumidifierAbsoluteHumidityNeighborSensor(_AbsoluteHumiditySensor):
+    _attr_translation_key = "absolute_humidity_neighbor"
+
+    def __init__(self, device: DehumidifierDevice, entry: ConfigEntry) -> None:
+        super().__init__(device, entry)
+        self._attr_unique_id = f"{entry.entry_id}_absolute_humidity_neighbor"
+        self._attr_suggested_object_id = f"{device.slug}_absolute_humidity_neighbor"
+
+    @property
+    def native_value(self) -> float | None:
+        return self._device.absolute_humidity_neighbor()

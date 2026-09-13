@@ -19,6 +19,8 @@ from .const import (
     CONF_MANUAL_RUNTIME,
     CONF_MAX_HUMIDITY,
     CONF_MIN_HUMIDITY,
+    CONF_NEIGHBOR_TEMP_ENTITY,
+    CONF_ROOM_TEMP_ENTITY,
     DEFAULT_DELTA,
     DEFAULT_DRY_TOLERANCE,
     DEFAULT_MANUAL_PAUSE,
@@ -43,6 +45,12 @@ def _user_schema() -> vol.Schema:
             ),
             vol.Optional(CONF_ABS_HUMIDITY_ENTITY): selector.EntitySelector(
                 selector.EntitySelectorConfig(domain="sensor")
+            ),
+            vol.Optional(CONF_ROOM_TEMP_ENTITY): selector.EntitySelector(
+                selector.EntitySelectorConfig(domain="sensor", device_class="temperature")
+            ),
+            vol.Optional(CONF_NEIGHBOR_TEMP_ENTITY): selector.EntitySelector(
+                selector.EntitySelectorConfig(domain="sensor", device_class="temperature")
             ),
         }
     )
