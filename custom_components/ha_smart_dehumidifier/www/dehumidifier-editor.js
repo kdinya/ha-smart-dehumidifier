@@ -1,8 +1,6 @@
 import { html, css, LitElement } from './files/lit-proxy.js';
 import { EDITOR_SCHEMA } from './visual-editor-config.js';
 import {
-  AUTO_DERIVED_ENTITY_KEYS,
-  deriveVerifiedEntities,
   resolveDeviceHumidifierEntity,
   resolveEntityDeviceId,
   DEHUMIDIFIER_PLATFORM,
@@ -357,43 +355,8 @@ class DehumidifierEditor extends LitElement {
     this._openSections = buildInitialSections(this._openSections);
   }
 
-  // Підтверджені сутності пристрою — рахуються наживо при кожному зверненні
-  // (а не кешуються в полі), щоб не залежати від того, в якому порядку
-  // Lovelace виставляє hass/config: обрані під час налаштування пристрою
-  // (fan_entity, current_humidity_entity, abs_humidity_entity) і ті, що
-  // створив сам пристрій, підтягуються коректно, щойно hass доступний.
-  _verified() {
-    return deriveVerifiedEntities(this._config, this.hass);
-  }
-
-  _resolved() {
-    return { ...this._verified(), ...this._config };
-  }
-
-  // Список entity_id, дозволених у пікері для конкретного поля: підтверджені
-  // сутності пристрою (з урахуванням домену поля) + поточне значення поля
-  // (щоб не приховати вже застосоване ручне перевизначення). Якщо нічого не
-  // підтверджено — список порожній, і поле лишається порожнім, а не показує
-  // довільну сутність з усієї системи.
-  _entityCandidates(field) {
-    const ids = new Set();
-    const verified = this._verified();
-
-    for (const key of AUTO_DERIVED_ENTITY_KEYS) {
-      const id = verified?.[key];
-      if (id) ids.add(id);
-    }
-
-    const current = this._fieldValue(field);
-    if (current) ids.add(current);
-
-    const list = [...ids];
-    return field.domain ? list.filter((id) => id.split('.')[0] === field.domain) : list;
-  }
-
   _fieldValue(field) {
-    const source = field.type === 'entity' ? this._resolved() : this._config;
-    const value = source?.[field.key];
+    const value = this._config?.[field.key];
     return value !== undefined ? value : field.default;
   }
 
@@ -419,17 +382,6 @@ class DehumidifierEditor extends LitElement {
         field.min ?? -Infinity,
         field.max ?? Infinity
       );
-    } else if (field.type === 'entity') {
-      const trimmed = String(rawValue ?? '').trim();
-      if (trimmed) {
-        next[field.key] = trimmed;
-      } else {
-        // Порожнє значення з пікера не повинно назавжди ховати
-        // автопідтягнуту сутність (обрану при налаштуванні пристрою чи
-        // створену ним самим) — просто прибираємо ручне перевизначення,
-        // а не зберігаємо порожній рядок, який має пріоритет над авто.
-        delete next[field.key];
-      }
     } else {
       next[field.key] = String(rawValue ?? '').trim();
     }
@@ -590,35 +542,6 @@ class DehumidifierEditor extends LitElement {
     `;
   }
 
-  _renderEntity(field) {
-    const value = this._fieldValue(field) || '';
-
-    // Головне поле "Осушувач" (entity) — це те, що визначає сам пристрій,
-    // тож звужувати його список до "сутностей пристрою" неможливо (пристрій
-    // ще невідомий). Усі інші поля обмежені лише сутностями, підтвердженими
-    // цим пристроєм — обраними при налаштуванні або створеними ним самим.
-    const restrictToDevice = field.key !== 'entity';
-    const includeEntities = restrictToDevice ? this._entityCandidates(field) : undefined;
-
-    return html`
-      <div class="field">
-        <div class="field-head">
-          <div class="field-label">${field.label}</div>
-          ${this._renderReset(field)}
-        </div>
-
-        <ha-entity-picker
-          .hass=${this.hass}
-          .value=${value}
-          .includeDomains=${restrictToDevice ? undefined : (field.domain ? [field.domain] : undefined)}
-          .includeEntities=${includeEntities}
-          allow-custom-entity
-          @value-changed=${(e) => this._setValue(field, e.detail.value)}
-        ></ha-entity-picker>
-      </div>
-    `;
-  }
-
   // Поле "Пристрій осушувача": користувач обирає ПРИСТРІЙ (як у Settings →
   // Devices), а не entity_id напряму. Під капотом це все одно зберігається
   // в config.entity (головна сутність `humidifier.*` цього пристрою) — уся
@@ -662,7 +585,6 @@ class DehumidifierEditor extends LitElement {
     if (field.type === 'tog') return this._renderToggle(field);
     if (field.type === 'select') return this._renderSelect(field);
     if (field.type === 'num') return this._renderNumber(field);
-    if (field.type === 'entity') return this._renderEntity(field);
     if (field.type === 'device') return this._renderDevice(field);
     return this._renderText(field);
   }

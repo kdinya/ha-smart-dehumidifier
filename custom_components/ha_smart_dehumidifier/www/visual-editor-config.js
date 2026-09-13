@@ -3,7 +3,6 @@ const txt = (key, label, def = '') => field('txt', key, label, { default: def })
 const num = (key, label, min, max, def, step = 1) => field('num', key, label, { min, max, step, default: def });
 const tog = (key, label, def = false) => field('tog', key, label, { default: def });
 const sel = (key, label, def, options) => field('select', key, label, { default: def, options });
-const ent = (key, label, domain, def = '') => field('entity', key, label, { domain, default: def });
 const dev = (key, label, def = '') => field('device', key, label, { default: def });
 const section = (id, em, title, fields) => ({ id, em, title, fields });
 
@@ -16,9 +15,6 @@ const ALIGNMENT_OPTIONS = [
 export const EDITOR_SCHEMA = [
   section('entities', '🔗', 'Сутності', [
     dev('entity', 'Пристрій осушувача'),
-    ent('fan_entity', 'Вимикач вентилятора', 'switch'),
-    ent('current_humidity_entity', 'Датчик поточної вологості (необов’язково)', 'sensor'),
-    ent('abs_humidity_entity', 'Датчик вологості іншої кімнати (для авто-розрахунку)', 'sensor'),
   ]),
 
   section('layout', '📐', 'Розкладка', [
