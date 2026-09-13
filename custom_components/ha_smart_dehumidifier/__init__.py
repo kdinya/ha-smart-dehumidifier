@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+import os
 
 from homeassistant.components.frontend import add_extra_js_url
 from homeassistant.config_entries import ConfigEntry
@@ -13,9 +14,25 @@ from .device import DehumidifierDevice
 _LOGGER = logging.getLogger(__name__)
 
 
+def _cache_busted_card_js_url(www_path: str) -> str:
+    """Append ?v=<mtime> so browsers fetch a fresh card.js after every update.
+
+    ES module imports are cached by the browser per exact URL — without a
+    changing query string, an update to index.js on disk can keep being
+    served from a stale (possibly broken, mid-edit) cached copy, which looks
+    to the user exactly like "Custom element not found".
+    """
+    try:
+        mtime = os.path.getmtime(os.path.join(www_path, "index.js"))
+        return f"{CARD_JS_URL}?v={int(mtime)}"
+    except OSError:
+        return CARD_JS_URL
+
+
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     """Register the bundled Lovelace card so it loads without a manual resource."""
     www_path = hass.config.path("custom_components", DOMAIN, "www")
+    card_js_url = _cache_busted_card_js_url(www_path)
 
     registered = False
     try:
@@ -44,13 +61,13 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
         )
 
     if registered:
-        add_extra_js_url(hass, CARD_JS_URL)
-        _LOGGER.debug("HA Smart Dehumidifier: card registered at %s", CARD_JS_URL)
+        add_extra_js_url(hass, card_js_url)
+        _LOGGER.debug("HA Smart Dehumidifier: card registered at %s", card_js_url)
     else:
         _LOGGER.error(
             "HA Smart Dehumidifier: card resource was NOT registered - "
             "add it manually in Settings -> Dashboards -> Resources as %s (JavaScript Module)",
-            CARD_JS_URL,
+            card_js_url,
         )
 
     return True

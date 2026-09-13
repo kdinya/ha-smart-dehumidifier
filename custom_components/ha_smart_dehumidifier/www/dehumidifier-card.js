@@ -92,17 +92,32 @@ class MyDehumidifierCard extends LitElement {
       margin: 0;
       width: 100%;
       max-width: var(--dh-glass-max-width, 1000px);
-      aspect-ratio: var(--dh-glass-ar-mobile, 1);
       box-sizing: border-box;
       border-radius: var(--dh-card-radius, 28px);
       display: flex;
       align-items: center;
       justify-content: var(--dh-justify, center);
-      container-type: size;
+      container-type: inline-size;
     }
 
+    /*
+     * На вузьких екранах (мобільний) висота ha-card НЕ фіксується
+     * aspect-ratio — вона природно підлаштовується під вміст (.dh-frame),
+     * тож відступи зверху/знизу (спейсери нижче) РЕАЛЬНО додають висоту
+     * картці, а не стискають/зсувають пристрій усередині фіксованої
+     * коробки. На широких екранах (>=480px) картці й далі задається
+     * власне співвідношення сторін (--dh-glass-ar-wide) - це навмисний
+     * "леттербоксинг" для десктопу, його не чіпаємо.
+     */
     @container (min-width: 480px) {
-      ha-card { aspect-ratio: var(--dh-glass-ar-wide, 1.8); }
+      ha-card {
+        aspect-ratio: var(--dh-glass-ar-wide, 1.8);
+        container-type: size;
+      }
+
+      .dh-frame {
+        width: min(100cqi, calc(100cqb * var(--dh-frame-ar-num, 1)), var(--dh-frame-max-width, 400px));
+      }
     }
 
     .dh-card-bg,
@@ -187,7 +202,7 @@ class MyDehumidifierCard extends LitElement {
     }
 
     .dh-frame {
-      width: min(100cqi, calc(100cqb * var(--dh-frame-ar-num, 1)), var(--dh-frame-max-width, 400px));
+      width: min(100cqi, var(--dh-frame-max-width, 400px));
       position: relative;
       z-index: 1;
       flex: 0 0 auto;
@@ -203,6 +218,12 @@ class MyDehumidifierCard extends LitElement {
       flex: 0 0 auto;
     }
 
+    .dh-frame-top-spacer {
+      flex: 0 0 auto;
+      width: 100%;
+      height: var(--dh-pad-top, 0px);
+    }
+
     .dh-frame-bottom-spacer {
       flex: 0 0 auto;
       width: 100%;
@@ -213,8 +234,13 @@ class MyDehumidifierCard extends LitElement {
       position: absolute;
       inset: 0;
       box-sizing: border-box;
-      padding: var(--dh-pad-top, 40px) var(--dh-pad-right, 14px) 0 var(--dh-pad-left, 14px);
+      padding: 0 var(--dh-pad-right, 14px) 0 var(--dh-pad-left, 14px);
       overflow: visible;
+      /* Найближчий контейнер розмірного запиту для .dh-device: cqmin тут
+         рахується від ВЖЕ звуженого горизонтальними відступами простору
+         (a не від зовнішньої ha-card), тож ліве/праве поле лишається
+         однаковим і на вузьких екранах. */
+      container-type: size;
     }
 
     .dh-device {
@@ -463,23 +489,8 @@ class MyDehumidifierCard extends LitElement {
     const controlsMax = toPositiveNumber(config.controls_max_width, 520);
     const curMax = toPositiveNumber(config.cur_max_width, 400);
     const heightPercent = toPositiveNumber(config.card_height_percent, DEFAULT_HEIGHT_PERCENT);
-    // .dh-frame-aspect (вміст) зберігає ЧИСТИЙ, незмінний aspect-ratio -
-    // саме він задіяний у формулі ШИРИНИ рамки (calc(100cqb * ...)), тож
-    // домішувати туди піксельний відступ не можна - це зсуває ширину й
-    // ламає центрування на вузьких екранах. Замість цього нижній відступ
-    // реалізовано окремим блоком-спейсером (.dh-frame-bottom-spacer) під
-    // .dh-frame-aspect - він додає РЕАЛЬНУ висоту знизу, не чіпаючи ширину.
     const frameRatioNum = 100 / heightPercent;
     const frameRatio = `100 / ${heightPercent}`;
-
-    // На вузьких екранах ha-card бере той самий frameRatio, що й рамка
-    // (--dh-glass-ar-mobile), тож щоб спейсер не обрізався overflow:hidden
-    // картки, тут і лише тут додаємо еквівалент нижнього відступу до
-    // висоти самої ha-card (глядачу не видно різниці - просто немає обрізання).
-    const padBottomPx = toFiniteNumber(config.content_padding_bottom, 16);
-    const extraHeightPercent = layoutBaseWidth > 0 ? (padBottomPx / layoutBaseWidth) * 100 : 0;
-    const glassMobileHeightPercent = heightPercent + extraHeightPercent;
-    const glassMobileRatio = `100 / ${glassMobileHeightPercent}`;
 
     const glassRatio = toPositiveNumber(config.glass_aspect_ratio, 1.8);
     const align = normalizeAlign(config.alignment);
@@ -497,12 +508,11 @@ class MyDehumidifierCard extends LitElement {
       curMax,
       frameRatioNum,
       frameRatio,
-      glassMobileRatio,
       glassRatio: String(glassRatio),
       alignClass: `align-${align}`,
       justifyContent,
       padTop: `${toFiniteNumber(config.content_padding_top, 0)}px`,
-      padBottom: `${padBottomPx}px`,
+      padBottom: `${toFiniteNumber(config.content_padding_bottom, 16)}px`,
       padLeft: `${toFiniteNumber(config.content_padding_left, 14)}px`,
       padRight: `${toFiniteNumber(config.content_padding_right, 14)}px`,
       offsetX: `${toFiniteNumber(config.device_offset_x, 0)}px`,
@@ -554,7 +564,6 @@ class MyDehumidifierCard extends LitElement {
     const cardStyle = `
       --dh-card-radius: ${layout.borderRadius}px;
       --dh-glass-max-width: ${layout.glassMaxWidth}px;
-      --dh-glass-ar-mobile: ${layout.glassMobileRatio};
       --dh-glass-ar-wide: ${layout.glassRatio};
       --dh-justify: ${layout.justifyContent};
     `;
@@ -591,6 +600,7 @@ class MyDehumidifierCard extends LitElement {
         </button>
 
         <div class="dh-frame ${layout.alignClass}" style="${frameStyle}">
+          <div class="dh-frame-top-spacer"></div>
           <div class="dh-frame-aspect">
             <div class="dh-scene">
               <div class="dh-device">
