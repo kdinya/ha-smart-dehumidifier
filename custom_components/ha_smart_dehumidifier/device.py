@@ -311,6 +311,11 @@ class DehumidifierDevice:
         self.recompute()
 
     def async_set_humidity(self, humidity: float) -> None:
+        # Будь-яка ручна зміна цільової вологості (кнопки +/-, повзунок,
+        # клік по панелі авто- чи цільової вологості) одразу вимикає
+        # авто-режим, щоб наступна ж синхронізація з сенсорів
+        # (_async_source_changed) не перезаписала вибір користувача.
+        self.auto_mode = False
         self.target_humidity = int(_clamp(humidity, 0, 100))
         self.recompute()
 
