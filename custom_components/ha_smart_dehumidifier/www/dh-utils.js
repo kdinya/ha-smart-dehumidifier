@@ -59,6 +59,7 @@ export function readHumidityTarget(card, entityId, fallback = 50) {
 export const AUTO_DERIVED_ENTITY_KEYS = [
   'fan_entity',
   'current_humidity_entity',
+  'abs_humidity_entity',
   'status_entity',
   'calc_entity',
   'auto_entity',

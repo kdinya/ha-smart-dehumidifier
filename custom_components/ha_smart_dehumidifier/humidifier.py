@@ -95,6 +95,7 @@ class DehumidifierHumidifierEntity(HumidifierEntity):
             # Сутності, обрані користувачем під час налаштування пристрою:
             "fan_entity": self._device.fan_entity,
             "current_humidity_entity": self._device.current_humidity_entity,
+            "abs_humidity_entity": self._device.abs_humidity_entity,
             # Сутності, які створив сам пристрій (їх entity_id визначається
             # через реєстр сутностей, а не вгадується за object_id):
             "status_entity": self._sibling_entity_id("sensor", "status"),

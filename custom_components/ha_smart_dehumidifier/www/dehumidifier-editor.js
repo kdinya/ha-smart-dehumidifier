@@ -341,28 +341,20 @@ class DehumidifierEditor extends LitElement {
 
   setConfig(config) {
     this._config = { ...config };
-    this._recomputeResolved();
     this._openSections = buildInitialSections(this._openSections);
   }
 
-  willUpdate(changedProps) {
-    // Коли hass з'являється/оновлюється (наприклад, стани ще не були
-    // завантажені в момент setConfig), перерахувати список сутностей,
-    // щоб підтягнути ті, що обрані при налаштуванні пристрою, і ті, що
-    // створені самим пристроєм.
-    if (changedProps.has('hass') && this._config) {
-      this._recomputeResolved();
-    }
+  // Підтверджені сутності пристрою — рахуються наживо при кожному зверненні
+  // (а не кешуються в полі), щоб не залежати від того, в якому порядку
+  // Lovelace виставляє hass/config: обрані під час налаштування пристрою
+  // (fan_entity, current_humidity_entity, abs_humidity_entity) і ті, що
+  // створив сам пристрій, підтягуються коректно, щойно hass доступний.
+  _verified() {
+    return deriveVerifiedEntities(this._config, this.hass);
   }
 
-  _recomputeResolved() {
-    // _verifiedEntities: лише сутності, підтверджені самим пристроєм
-    // (обрані під час налаштування — fan_entity, current_humidity_entity —
-    // або створені самим пристроєм і знайдені через реєстр). Це і є та
-    // множина, з якої дозволено обирати в полях-пікерах нижче — жодних
-    // "випадкових" сутностей з усієї системи.
-    this._verifiedEntities = deriveVerifiedEntities(this._config, this.hass);
-    this._resolved = { ...this._verifiedEntities, ...this._config };
+  _resolved() {
+    return { ...this._verified(), ...this._config };
   }
 
   // Список entity_id, дозволених у пікері для конкретного поля: підтверджені
@@ -372,9 +364,10 @@ class DehumidifierEditor extends LitElement {
   // довільну сутність з усієї системи.
   _entityCandidates(field) {
     const ids = new Set();
+    const verified = this._verified();
 
     for (const key of AUTO_DERIVED_ENTITY_KEYS) {
-      const id = this._verifiedEntities?.[key];
+      const id = verified?.[key];
       if (id) ids.add(id);
     }
 
@@ -386,7 +379,7 @@ class DehumidifierEditor extends LitElement {
   }
 
   _fieldValue(field) {
-    const source = field.type === 'entity' ? this._resolved : this._config;
+    const source = field.type === 'entity' ? this._resolved() : this._config;
     const value = source?.[field.key];
     return value !== undefined ? value : field.default;
   }
@@ -399,7 +392,6 @@ class DehumidifierEditor extends LitElement {
 
   _emitConfig(next) {
     this._config = next;
-    this._recomputeResolved();
     fireEvent(this, 'config-changed', { config: next });
   }
 

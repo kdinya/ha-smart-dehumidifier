@@ -16,6 +16,7 @@ export const EDITOR_SCHEMA = [
   section('entities', '🔗', 'Сутності', [
     ent('fan_entity', 'Вимикач вентилятора', 'switch'),
     ent('current_humidity_entity', 'Датчик поточної вологості (необов’язково)', 'sensor'),
+    ent('abs_humidity_entity', 'Датчик вологості іншої кімнати (для авто-розрахунку)', 'sensor'),
   ]),
 
   section('layout', '📐', 'Розкладка', [
