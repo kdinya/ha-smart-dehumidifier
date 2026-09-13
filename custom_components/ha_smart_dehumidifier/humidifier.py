@@ -63,13 +63,15 @@ class DehumidifierHumidifierEntity(HumidifierEntity):
 
     @property
     def min_humidity(self) -> int:
-        # Ліміти min/max діють лише в авто-режимі. Коли авто вимкнено,
-        # користувач повинен мати змогу обрати будь-яке значення 0-100%.
-        return self._device.min_humidity if self._device.auto_mode else 0
+        # Ліміти min/max (Options пристрою) застосовуються лише всередині
+        # авто-розрахунку рекомендованої вологості (device.recommended_humidity),
+        # а не як обмеження на ручний вибір значення. Ручний вибір завжди
+        # доступний у повному діапазоні 0-100%, незалежно від auto_mode.
+        return 0
 
     @property
     def max_humidity(self) -> int:
-        return self._device.max_humidity if self._device.auto_mode else 100
+        return 100
 
     @property
     def current_humidity(self):
