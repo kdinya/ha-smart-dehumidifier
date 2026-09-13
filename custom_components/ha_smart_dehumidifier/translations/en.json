@@ -1,0 +1,52 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "HA Smart Dehumidifier",
+        "description": "Set up the smart dehumidifier",
+        "data": {
+          "name": "Name",
+          "fan_entity": "Fan switch",
+          "current_humidity_entity": "Humidity sensor (dehumidifier room)",
+          "abs_humidity_entity": "Absolute humidity sensor (adjacent room)",
+          "ref_temp_entity": "Temperature sensor (adjacent room)"
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Calculation & timer settings",
+        "data": {
+          "delta": "Absolute humidity delta",
+          "min_humidity": "Minimum recommended humidity, %",
+          "max_humidity": "Maximum recommended humidity, %",
+          "dry_tolerance": "Hysteresis tolerance, %",
+          "manual_runtime": "Manual mode duration, min",
+          "manual_pause": "Pause after manual mode, min"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "status": {
+        "name": "Status"
+      },
+      "recommended_humidity": {
+        "name": "Recommended humidity"
+      }
+    },
+    "switch": {
+      "auto_mode": {
+        "name": "Auto mode"
+      }
+    },
+    "button": {
+      "manual_toggle": {
+        "name": "Manual toggle"
+      }
+    }
+  }
+}
