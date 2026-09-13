@@ -37,8 +37,6 @@ class DehumidifierHumidifierEntity(HumidifierEntity):
         self._entry = entry
         self._attr_unique_id = f"{entry.entry_id}_humidifier"
         self._attr_suggested_object_id = device.slug
-        self._attr_min_humidity = device.min_humidity
-        self._attr_max_humidity = device.max_humidity
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
             name=entry.title,
@@ -62,6 +60,16 @@ class DehumidifierHumidifierEntity(HumidifierEntity):
     @property
     def target_humidity(self) -> int:
         return self._device.target_humidity
+
+    @property
+    def min_humidity(self) -> int:
+        # Ліміти min/max діють лише в авто-режимі. Коли авто вимкнено,
+        # користувач повинен мати змогу обрати будь-яке значення 0-100%.
+        return self._device.min_humidity if self._device.auto_mode else 0
+
+    @property
+    def max_humidity(self) -> int:
+        return self._device.max_humidity if self._device.auto_mode else 100
 
     @property
     def current_humidity(self):
