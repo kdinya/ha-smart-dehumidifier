@@ -14,7 +14,6 @@ const ALIGNMENT_OPTIONS = [
 
 export const EDITOR_SCHEMA = [
   section('entities', '🔗', 'Сутності', [
-    ent('entity', 'Осушувач (humidifier)', 'humidifier'),
     ent('fan_entity', 'Вимикач вентилятора', 'switch'),
     ent('current_humidity_entity', 'Датчик поточної вологості (необов’язково)', 'sensor'),
     ent('auto_entity', 'Перемикач Авто-режиму (необов’язково)', 'switch'),
