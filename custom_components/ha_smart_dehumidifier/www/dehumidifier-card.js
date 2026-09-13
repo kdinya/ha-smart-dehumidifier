@@ -440,7 +440,7 @@ class MyDehumidifierCard extends LitElement {
     const layoutBaseWidth = toPositiveNumber(config.layout_base_width, 600);
     const humPanelMax = toPositiveNumber(
       config.hum_panel_max_width,
-      toPositiveNumber(config.hum_panel_width, 240)
+      toPositiveNumber(config.hum_panel_width, 250)
     );
     const controlsMax = toPositiveNumber(config.controls_max_width, 520);
     const curMax = toPositiveNumber(config.cur_max_width, 400);
@@ -465,7 +465,7 @@ class MyDehumidifierCard extends LitElement {
       glassRatio: String(glassRatio),
       alignClass: `align-${align}`,
       justifyContent,
-      padTop: `${toFiniteNumber(config.content_padding_top, 40)}px`,
+      padTop: `${toFiniteNumber(config.content_padding_top, 0)}px`,
       padBottom: `${toFiniteNumber(config.content_padding_bottom, 16)}px`,
       padLeft: `${toFiniteNumber(config.content_padding_left, 14)}px`,
       padRight: `${toFiniteNumber(config.content_padding_right, 14)}px`,

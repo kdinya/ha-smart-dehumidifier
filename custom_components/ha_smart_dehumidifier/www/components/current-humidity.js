@@ -98,7 +98,7 @@ export function renderCurrentHumidity(card, config = {}) {
   const curLetterSpacing = toFiniteNumber(config.cur_letter_spacing, -2);
   const curGap = toFiniteNumber(config.cur_gap, 3);
   const curUnitMarginLeft = toFiniteNumber(config.cur_unit_margin_left, 2);
-  const curOffsetY = toFiniteNumber(config.cur_offset_y, 10);
+  const curOffsetY = toFiniteNumber(config.cur_offset_y, 6);
 
   const curShowDecimal = config.cur_show_decimal ?? true;
   const curShowUnit = config.cur_show_unit ?? true;

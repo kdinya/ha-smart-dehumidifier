@@ -188,9 +188,9 @@ export function renderHumidityPanel(card, config = {}) {
   const layoutBaseWidth = toPositiveNumber(config.layout_base_width, DEFAULT_LAYOUT_BASE_WIDTH);
   const controlsMaxWidth = toPositiveNumber(config.controls_max_width, DEFAULT_CONTROLS_MAX_WIDTH);
 
-  const requestedPanelWidth = toPositiveNumber(config.hum_panel_width, PANEL_BASE_WIDTH);
+  const requestedPanelWidth = toPositiveNumber(config.hum_panel_width, 250);
   const panelWidth = Math.min(requestedPanelWidth, controlsMaxWidth);
-  const panelHeight = toPositiveNumber(config.hum_panel_height, 54);
+  const panelHeight = toPositiveNumber(config.hum_panel_height, 70);
   const panelRadius = toFiniteNumber(config.hum_panel_radius, 28);
   const panelPaddingX = toFiniteNumber(config.hum_panel_padding_x, 5);
 
@@ -198,8 +198,8 @@ export function renderHumidityPanel(card, config = {}) {
   const displayHeight = toPositiveNumber(config.hum_display_height, 42);
   const displayRadius = toFiniteNumber(config.hum_display_radius, 12);
 
-  const humBtnSize = toPositiveNumber(config.hum_btn_size, 40);
-  const humBtnFontSize = toPositiveNumber(config.hum_btn_font_size, 20);
+  const humBtnSize = toPositiveNumber(config.hum_btn_size, 60);
+  const humBtnFontSize = toPositiveNumber(config.hum_btn_font_size, 35);
 
   const tgtSize = toPositiveNumber(config.tgt_size, 32);
   const tgtFontFamily = config.tgt_font_family || 'inherit';
@@ -216,7 +216,7 @@ export function renderHumidityPanel(card, config = {}) {
   const showTgtLabel = config.show_tgt_label ?? false;
   const tgtLabelText = config.tgt_label_text || 'Ціль';
   const tgtLabelSize = toPositiveNumber(config.tgt_label_size, 9);
-  const panelBottom = toFiniteNumber(config.hum_panel_bottom, 110);
+  const panelBottom = toFiniteNumber(config.hum_panel_bottom, 50);
 
   const autoShow = config.auto_ui_show ?? true;
   const autoAccentColor = config.auto_ui_color || '#7fc8ff';

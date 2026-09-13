@@ -158,7 +158,7 @@ export function renderBottomControls(card, config = {}) {
 
   const timerText = getRuntimeText(card, config);
 
-  const btnHeight = toPositiveNumber(config.btn_height, 54);
+  const btnHeight = toPositiveNumber(config.btn_height, 70);
   const btnOffColor = config.btn_off_color ?? 'var(--error-color, #ff4d4d)';
   const btnOnColor =
     config.btn_on_color ?? 'var(--state-humidifier-color, #00bfff)';
@@ -168,16 +168,16 @@ export function renderBottomControls(card, config = {}) {
   const badgeWidth = toPositiveNumber(config.badge_width, 92);
   const badgeHeight = toPositiveNumber(config.badge_height, 22);
   const badgeRadius = toFiniteNumber(config.badge_radius, 6);
-  const badgeSize = toPositiveNumber(config.badge_size, 9.5);
+  const badgeSize = toPositiveNumber(config.badge_size, 13);
   const badgeFontWeight = toFiniteNumber(config.badge_font_weight, 900);
   const badgeBgColor = config.badge_bg_color ?? '#06080b';
 
-  const btnsBottom = toFiniteNumber(config.btns_bottom, 14);
+  const btnsBottom = toFiniteNumber(config.btns_bottom, -13);
   const badgeOffsetY = toFiniteNumber(config.badge_offset_y, 0);
 
-  const btnLabelSize = toPositiveNumber(config.btn_label_size, 8);
+  const btnLabelSize = toPositiveNumber(config.btn_label_size, 16);
   const fanTextSize = toPositiveNumber(config.fan_text_size, 15);
-  const btnIconSize = toPositiveNumber(config.btn_icon_size, 18);
+  const btnIconSize = toPositiveNumber(config.btn_icon_size, 30);
 
   const widthCss = layoutUnit(controlsMaxWidth, layoutBaseWidth);
   const btnHeightCss = layoutUnit(btnHeight, layoutBaseWidth);
