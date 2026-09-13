@@ -17,17 +17,42 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     """Register the bundled Lovelace card so it loads without a manual resource."""
     www_path = hass.config.path("custom_components", DOMAIN, "www")
 
+    registered = False
     try:
         from homeassistant.components.http import StaticPathConfig
 
         await hass.http.async_register_static_paths(
             [StaticPathConfig(CARD_URL_BASE, www_path, cache_headers=False)]
         )
+        registered = True
     except ImportError:
-        # Fallback for older HA cores without async_register_static_paths.
-        hass.http.register_static_path(CARD_URL_BASE, www_path, cache_headers=False)
+        # Older HA cores without async_register_static_paths / StaticPathConfig.
+        try:
+            hass.http.register_static_path(CARD_URL_BASE, www_path, cache_headers=False)
+            registered = True
+        except Exception:  # noqa: BLE001
+            _LOGGER.exception(
+                "HA Smart Dehumidifier: failed to register static path %s -> %s",
+                CARD_URL_BASE,
+                www_path,
+            )
+    except Exception:  # noqa: BLE001
+        _LOGGER.exception(
+            "HA Smart Dehumidifier: failed to register static path %s -> %s",
+            CARD_URL_BASE,
+            www_path,
+        )
 
-    add_extra_js_url(hass, CARD_JS_URL)
+    if registered:
+        add_extra_js_url(hass, CARD_JS_URL)
+        _LOGGER.debug("HA Smart Dehumidifier: card registered at %s", CARD_JS_URL)
+    else:
+        _LOGGER.error(
+            "HA Smart Dehumidifier: card resource was NOT registered - "
+            "add it manually in Settings -> Dashboards -> Resources as %s (JavaScript Module)",
+            CARD_JS_URL,
+        )
+
     return True
 
 

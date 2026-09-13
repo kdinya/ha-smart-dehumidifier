@@ -80,6 +80,21 @@ entity: humidifier.smart_xxx
 | Тривалість ручного режиму | 20 хв |
 | Пауза після ручного режиму | 20 хв |
 
+## Якщо картка не з'являється (Custom element doesn't exist)
+
+1. Перевір, що інтеграція реально завантажилась: Settings → System → Logs →
+   пошук "ha_smart_dehumidifier". Якщо бачиш помилку реєстрації ресурсу —
+   там же буде вказано, що зробити.
+2. Відкрий картку в браузері (F12 → Network), онови сторінку і перевір
+   запит `/ha_smart_dehumidifier_files/index.js` — має бути **200**, а не
+   404. Якщо 404 — інтеграція не завантажилась (перевір логи) або HA
+   потрібно повністю перезапустити (не reload, а restart) після
+   встановлення через HACS.
+3. Жорстко онови кеш браузера (Ctrl+Shift+R / Cmd+Shift+R).
+4. Якщо нічого з вищого не допомогло — додай ресурс вручну: Settings →
+   Dashboards → ⋮ → Resources → Add resource → URL
+   `/ha_smart_dehumidifier_files/index.js`, тип **JavaScript Module**.
+
 ## Розробка / внесок
 
 - `custom_components/ha_smart_dehumidifier/` — інтеграція (Python).
