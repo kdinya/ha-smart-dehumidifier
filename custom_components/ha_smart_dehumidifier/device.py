@@ -20,6 +20,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later, async_track_state_change_event
+from homeassistant.util import slugify
 
 from .const import (
     CONF_ABS_HUMIDITY_ENTITY,
@@ -40,6 +41,7 @@ from .const import (
     DEFAULT_MIN_HUMIDITY,
     DEFAULT_TARGET_HUMIDITY,
     DOMAIN,
+    ENTITY_ID_PREFIX,
     STATUS_DRYING,
     STATUS_DRYING_MANUAL,
     STATUS_IDLE,
@@ -98,6 +100,12 @@ class DehumidifierDevice:
     @property
     def signal(self) -> str:
         return SIGNAL_UPDATE.format(self.entry.entry_id)
+
+    @property
+    def slug(self) -> str:
+        """Базовий entity_id зі своїм префіксом - щоб ніколи не перетнутись зі старими vanna_* об'єктами."""
+        base = slugify(self.entry.title) or "dehumidifier"
+        return f"{ENTITY_ID_PREFIX}_{base}"
 
     # ------------------------------------------------------------ lifecycle
 

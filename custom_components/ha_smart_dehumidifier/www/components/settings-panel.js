@@ -13,16 +13,16 @@ export function renderSettingsPanel(card, config) {
   const getVal = (id, def) => (hass.states[id] ? Number(hass.states[id].state) : def);
 
   const entities = {
-    delta: config.delta_entity || 'input_number.dh_delta',
-    min: config.min_rh_entity || 'input_number.dh_auto_min',
-    max: config.max_rh_entity || 'input_number.dh_auto_max',
-    calc: config.calc_entity || 'sensor.recommended_humidity',
-    runtime: config.manual_runtime_entity || 'input_number.dh_manual_runtime',
-    pause: config.manual_pause_runtime_entity || 'input_number.dh_manual_pause_runtime',
+    delta: config.delta_entity,
+    min: config.min_rh_entity,
+    max: config.max_rh_entity,
+    calc: config.calc_entity,
+    runtime: config.manual_runtime_entity,
+    pause: config.manual_pause_runtime_entity,
   };
 
   const vals = {
-    delta: getVal(entities.delta, 3.0),
+    delta: getVal(entities.delta, 3.75),
     min: getVal(entities.min, 65),
     max: getVal(entities.max, 85),
     runtime: getVal(entities.runtime, 20),
@@ -31,7 +31,7 @@ export function renderSettingsPanel(card, config) {
   };
 
   const updateValue = (id, val) =>
-    hass.callService('input_number', 'set_value', {
+    hass.callService('number', 'set_value', {
       entity_id: id,
       value: Number(val),
     });

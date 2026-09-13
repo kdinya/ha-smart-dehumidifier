@@ -28,6 +28,7 @@ class DehumidifierAutoModeSwitch(SwitchEntity):
     def __init__(self, device: DehumidifierDevice, entry: ConfigEntry) -> None:
         self._device = device
         self._attr_unique_id = f"{entry.entry_id}_auto_mode"
+        self._attr_suggested_object_id = f"{device.slug}_auto_mode"
         self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, entry.entry_id)})
 
     async def async_added_to_hass(self) -> None:

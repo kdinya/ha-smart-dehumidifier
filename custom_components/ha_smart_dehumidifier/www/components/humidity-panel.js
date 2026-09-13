@@ -52,12 +52,12 @@ function readTargetState(card, config, fallback = DEFAULT_TARGET) {
 }
 
 function isAutoEnabled(card, config) {
-  const entityId = config.auto_entity || 'switch.vanna_auto_mode';
+  const entityId = config.auto_entity;
   return getEntityState(card, entityId)?.state === 'on';
 }
 
 function setAutoEnabled(card, config, enabled) {
-  const entityId = config.auto_entity || 'switch.vanna_auto_mode';
+  const entityId = config.auto_entity;
   callHA(card, 'switch', enabled ? 'turn_on' : 'turn_off', {
     entity_id: entityId,
   });

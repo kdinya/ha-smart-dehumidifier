@@ -52,7 +52,7 @@ const STATUS_MAP = {
 };
 
 function getStatusData(card, config) {
-  const entityId = config.status_entity || 'sensor.vanna_status';
+  const entityId = config.status_entity;
   const labelEntityId = entityId + '_label'; // Шукаємо сенсор із текстом
 
   const stateObj = getEntityState(card, entityId);
@@ -84,7 +84,7 @@ function getControlState(card, config) {
 }
 
 function getManualScriptEntity(config) {
-  return config.manual_script_entity || 'button.vanna_manual_toggle';
+  return config.manual_script_entity;
 }
 
 function handlePower(card, config, action, state) {

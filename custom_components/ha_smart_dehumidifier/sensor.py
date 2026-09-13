@@ -51,6 +51,7 @@ class DehumidifierStatusSensor(_BaseSensor):
     def __init__(self, device: DehumidifierDevice, entry: ConfigEntry) -> None:
         super().__init__(device, entry)
         self._attr_unique_id = f"{entry.entry_id}_status"
+        self._attr_suggested_object_id = f"{device.slug}_status"
 
     @property
     def native_value(self) -> str:
@@ -65,6 +66,7 @@ class DehumidifierRecommendedHumiditySensor(_BaseSensor):
     def __init__(self, device: DehumidifierDevice, entry: ConfigEntry) -> None:
         super().__init__(device, entry)
         self._attr_unique_id = f"{entry.entry_id}_recommended_humidity"
+        self._attr_suggested_object_id = f"{device.slug}_recommended_humidity"
 
     @property
     def native_value(self) -> int | None:

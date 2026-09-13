@@ -3,6 +3,7 @@ const txt = (key, label, def = '') => field('txt', key, label, { default: def })
 const num = (key, label, min, max, def, step = 1) => field('num', key, label, { min, max, step, default: def });
 const tog = (key, label, def = false) => field('tog', key, label, { default: def });
 const sel = (key, label, def, options) => field('select', key, label, { default: def, options });
+const ent = (key, label, domain, def = '') => field('entity', key, label, { domain, default: def });
 const section = (id, em, title, fields) => ({ id, em, title, fields });
 
 const ALIGNMENT_OPTIONS = [
@@ -12,7 +13,15 @@ const ALIGNMENT_OPTIONS = [
 ];
 
 export const EDITOR_SCHEMA = [
-  // 1. Секції Entities та System видалено повністю
+  section('entities', '🔗', 'Сутності', [
+    ent('entity', 'Осушувач (humidifier)', 'humidifier'),
+    ent('fan_entity', 'Вимикач вентилятора', 'switch'),
+    ent('current_humidity_entity', 'Датчик поточної вологості (необов’язково)', 'sensor'),
+    ent('auto_entity', 'Перемикач Авто-режиму (необов’язково)', 'switch'),
+    ent('status_entity', 'Сенсор статусу (необов’язково)', 'sensor'),
+    ent('calc_entity', 'Сенсор рекомендованої вологості (необов’язково)', 'sensor'),
+    ent('manual_script_entity', 'Кнопка ручного режиму (необов’язково)', 'button'),
+  ]),
 
   section('layout', '📐', 'Розкладка', [
     num('card_border_radius', 'Заокруглення картки', 0, 80, 28, 1),

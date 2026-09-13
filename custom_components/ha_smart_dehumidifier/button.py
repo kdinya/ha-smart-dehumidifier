@@ -26,6 +26,7 @@ class DehumidifierManualToggleButton(ButtonEntity):
     def __init__(self, device: DehumidifierDevice, entry: ConfigEntry) -> None:
         self._device = device
         self._attr_unique_id = f"{entry.entry_id}_manual_toggle"
+        self._attr_suggested_object_id = f"{device.slug}_manual_toggle"
         self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, entry.entry_id)})
 
     async def async_press(self) -> None:

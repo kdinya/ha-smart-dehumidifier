@@ -64,12 +64,12 @@ function progressOnArc(angle, start, span, preferProgress = 0) {
 }
 
 function isAutoEnabled(card, config) {
-  const entityId = config.auto_entity || 'input_boolean.vanna_auto_humidity';
+  const entityId = config.auto_entity;
   return card?._hass?.states?.[entityId]?.state === 'on';
 }
 
 function disableAutoAndHide(card, config) {
-  const entityId = config.auto_entity || 'input_boolean.vanna_auto_humidity';
+  const entityId = config.auto_entity;
 
   if (isAutoEnabled(card, config)) {
     card._hass?.callService('input_boolean', 'turn_off', {

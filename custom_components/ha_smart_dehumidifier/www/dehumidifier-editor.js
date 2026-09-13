@@ -530,10 +530,32 @@ class DehumidifierEditor extends LitElement {
     `;
   }
 
+  _renderEntity(field) {
+    const value = this._fieldValue(field) || '';
+
+    return html`
+      <div class="field">
+        <div class="field-head">
+          <div class="field-label">${field.label}</div>
+          ${this._renderReset(field)}
+        </div>
+
+        <ha-entity-picker
+          .hass=${this.hass}
+          .value=${value}
+          .includeDomains=${field.domain ? [field.domain] : undefined}
+          allow-custom-entity
+          @value-changed=${(e) => this._setValue(field, e.detail.value)}
+        ></ha-entity-picker>
+      </div>
+    `;
+  }
+
   _renderField(field) {
     if (field.type === 'tog') return this._renderToggle(field);
     if (field.type === 'select') return this._renderSelect(field);
     if (field.type === 'num') return this._renderNumber(field);
+    if (field.type === 'entity') return this._renderEntity(field);
     return this._renderText(field);
   }
 

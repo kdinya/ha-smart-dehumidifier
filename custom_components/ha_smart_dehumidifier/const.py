@@ -14,13 +14,15 @@ CONF_DRY_TOLERANCE = "dry_tolerance"
 CONF_MANUAL_RUNTIME = "manual_runtime"
 CONF_MANUAL_PAUSE = "manual_pause"
 
-DEFAULT_DELTA = 0.5
-DEFAULT_MIN_HUMIDITY = 30
-DEFAULT_MAX_HUMIDITY = 80
-DEFAULT_DRY_TOLERANCE = 3
+DEFAULT_DELTA = 3.75  # г/м3, робочий діапазон 3.5-4
+DEFAULT_MIN_HUMIDITY = 65
+DEFAULT_MAX_HUMIDITY = 85
+DEFAULT_DRY_TOLERANCE = 5
 DEFAULT_MANUAL_RUNTIME = 20
 DEFAULT_MANUAL_PAUSE = 20
-DEFAULT_TARGET_HUMIDITY = 50
+DEFAULT_TARGET_HUMIDITY = 70
+
+ENTITY_ID_PREFIX = "smart"
 
 STATUS_OFF = "off"
 STATUS_IDLE = "idle"
@@ -29,7 +31,7 @@ STATUS_DRYING = "drying"
 STATUS_DRYING_MANUAL = "drying_manual"
 STATUS_PAUSE = "pause"
 
-PLATFORMS = ["humidifier", "sensor", "switch", "button"]
+PLATFORMS = ["humidifier", "sensor", "switch", "button", "number"]
 
 CARD_URL_BASE = "/ha_smart_dehumidifier_files"
 CARD_JS_URL = f"{CARD_URL_BASE}/index.js"

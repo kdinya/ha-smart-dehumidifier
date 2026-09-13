@@ -34,6 +34,7 @@ class DehumidifierHumidifierEntity(HumidifierEntity):
     def __init__(self, device: DehumidifierDevice, entry: ConfigEntry) -> None:
         self._device = device
         self._attr_unique_id = f"{entry.entry_id}_humidifier"
+        self._attr_suggested_object_id = device.slug
         self._attr_min_humidity = device.min_humidity
         self._attr_max_humidity = device.max_humidity
         self._attr_device_info = DeviceInfo(

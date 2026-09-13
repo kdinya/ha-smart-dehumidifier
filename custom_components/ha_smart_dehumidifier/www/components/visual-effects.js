@@ -9,7 +9,6 @@ import {
   DEFAULT_LAYOUT_BASE_WIDTH,
 } from '../dh-utils.js';
 
-const DEFAULT_FAN_ENTITY = 'switch.unknown_right';
 
 function speedToDuration(value) {
   const speed = clamp(value, 1, 100);
@@ -32,7 +31,7 @@ function ensureParticles(card, count) {
 // Функцію getParticleCss видалено повністю! Тепер код значно легший.
 
 export function renderVisualEffects(card, config = {}) {
-  const fanEntity = config.fan_entity || DEFAULT_FAN_ENTITY;
+  const fanEntity = config.fan_entity;
   const fanOn = isEntityOn(card, fanEntity);
 
   const layoutBaseWidth = toPositiveNumber(

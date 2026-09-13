@@ -19,7 +19,7 @@
       "init": {
         "title": "Calculation & timer settings",
         "data": {
-          "delta": "Absolute humidity delta",
+          "delta": "Absolute humidity delta, g/m3 (3.5-4)",
           "min_humidity": "Minimum recommended humidity, %",
           "max_humidity": "Maximum recommended humidity, %",
           "dry_tolerance": "Hysteresis tolerance, %",
@@ -46,6 +46,23 @@
     "button": {
       "manual_toggle": {
         "name": "Manual toggle"
+      }
+    },
+    "number": {
+      "delta": {
+        "name": "Absolute humidity delta"
+      },
+      "min_humidity": {
+        "name": "Min recommended humidity"
+      },
+      "max_humidity": {
+        "name": "Max recommended humidity"
+      },
+      "manual_runtime": {
+        "name": "Manual mode duration"
+      },
+      "manual_pause": {
+        "name": "Pause after manual mode"
       }
     }
   }
