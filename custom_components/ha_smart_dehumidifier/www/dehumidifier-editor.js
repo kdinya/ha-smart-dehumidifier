@@ -341,8 +341,18 @@ class DehumidifierEditor extends LitElement {
 
   setConfig(config) {
     this._config = { ...config };
-    this._resolved = deriveConfig(this._config);
+    this._resolved = deriveConfig(this._config, this.hass);
     this._openSections = buildInitialSections(this._openSections);
+  }
+
+  willUpdate(changedProps) {
+    // Коли hass з'являється/оновлюється (наприклад, стани ще не були
+    // завантажені в момент setConfig), перерахувати список сутностей,
+    // щоб підтягнути ті, що обрані при налаштуванні пристрою, і ті, що
+    // створені самим пристроєм.
+    if (changedProps.has('hass') && this._config) {
+      this._resolved = deriveConfig(this._config, this.hass);
+    }
   }
 
   _fieldValue(field) {
@@ -359,7 +369,7 @@ class DehumidifierEditor extends LitElement {
 
   _emitConfig(next) {
     this._config = next;
-    this._resolved = deriveConfig(next);
+    this._resolved = deriveConfig(next, this.hass);
     fireEvent(this, 'config-changed', { config: next });
   }
 

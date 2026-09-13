@@ -52,13 +52,32 @@ export function readHumidityTarget(card, entityId, fallback = 50) {
   return clamp(fallback, 0, 100);
 }
 
-export function deriveConfig(config = {}) {
+// Ключі сутностей, які підтягуються автоматично (без ручного вибору):
+// частина — обрані користувачем під час налаштування пристрою
+// (fan_entity, current_humidity_entity), решта — сутності, які створив
+// сам пристрій.
+export const AUTO_DERIVED_ENTITY_KEYS = [
+  'fan_entity',
+  'current_humidity_entity',
+  'status_entity',
+  'calc_entity',
+  'auto_entity',
+  'manual_script_entity',
+  'delta_entity',
+  'min_rh_entity',
+  'max_rh_entity',
+  'manual_runtime_entity',
+  'manual_pause_runtime_entity',
+];
+
+export function deriveConfig(config = {}, hass = null) {
   // Для власного бекенду ha_smart_dehumidifier усі супутні сутності мають
   // передбачуваний entity_id (той самий object_id, що й у entity), тож їх
-  // не потрібно вказувати вручну — досить обрати лише `entity`.
+  // не потрібно вказувати вручну — досить обрати лише `entity`. Це запасний
+  // варіант на випадок, якщо hass ще недоступний (перший рендер).
   const objectId = typeof config.entity === 'string' ? config.entity.split('.')[1] : null;
 
-  const derived = objectId
+  const guessed = objectId
     ? {
         status_entity: `sensor.${objectId}_status`,
         calc_entity: `sensor.${objectId}_recommended_humidity`,
@@ -72,7 +91,25 @@ export function deriveConfig(config = {}) {
       }
     : {};
 
-  return { ...derived, ...config };
+  // Достовірні значення: сам пристрій публікує їх як атрибути стану
+  // головної сутності (entity) — це ті самі сутності, обрані під час
+  // налаштування пристрою (fan_entity, current_humidity_entity), і ті, що
+  // створив сам пристрій, знайдені через реєстр сутностей (коректно,
+  // навіть якщо object_id відрізняється від назви пристрою).
+  const stateAttrs = hass?.states?.[config.entity]?.attributes || {};
+  const fromDevice = {};
+  for (const key of AUTO_DERIVED_ENTITY_KEYS) {
+    if (stateAttrs[key]) fromDevice[key] = stateAttrs[key];
+  }
+
+  return { ...guessed, ...fromDevice, ...config };
+}
+
+export function hasEqualDerivedEntities(a, b) {
+  for (const key of AUTO_DERIVED_ENTITY_KEYS) {
+    if ((a?.[key] ?? null) !== (b?.[key] ?? null)) return false;
+  }
+  return true;
 }
 
 export function readCurrentHumidity(card, config = {}, fallback = 50) {

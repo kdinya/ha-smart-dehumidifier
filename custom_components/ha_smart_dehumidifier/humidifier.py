@@ -9,6 +9,7 @@ from homeassistant.components.humidifier import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -33,6 +34,7 @@ class DehumidifierHumidifierEntity(HumidifierEntity):
 
     def __init__(self, device: DehumidifierDevice, entry: ConfigEntry) -> None:
         self._device = device
+        self._entry = entry
         self._attr_unique_id = f"{entry.entry_id}_humidifier"
         self._attr_suggested_object_id = device.slug
         self._attr_min_humidity = device.min_humidity
@@ -74,11 +76,36 @@ class DehumidifierHumidifierEntity(HumidifierEntity):
             return HumidifierAction.DRYING
         return HumidifierAction.IDLE
 
+    def _sibling_entity_id(self, domain: str, suffix: str) -> str | None:
+        """Знайти реальний entity_id сутності нашого пристрою через реєстр.
+
+        Використовує unique_id (стабільний, не залежить від того, як
+        користувач перейменував entity_id), тож картка завжди отримає
+        правильне посилання, навіть якщо object_id відрізняється від
+        `device.slug` (перейменування, конфлікт імен тощо).
+        """
+        registry = er.async_get(self.hass)
+        return registry.async_get_entity_id(domain, DOMAIN, f"{self._entry.entry_id}_{suffix}")
+
     @property
     def extra_state_attributes(self) -> dict:
         return {
             "status": self._device.status,
             "auto_mode": self._device.auto_mode,
+            # Сутності, обрані користувачем під час налаштування пристрою:
+            "fan_entity": self._device.fan_entity,
+            "current_humidity_entity": self._device.current_humidity_entity,
+            # Сутності, які створив сам пристрій (їх entity_id визначається
+            # через реєстр сутностей, а не вгадується за object_id):
+            "status_entity": self._sibling_entity_id("sensor", "status"),
+            "calc_entity": self._sibling_entity_id("sensor", "recommended_humidity"),
+            "auto_entity": self._sibling_entity_id("switch", "auto_mode"),
+            "manual_script_entity": self._sibling_entity_id("button", "manual_toggle"),
+            "delta_entity": self._sibling_entity_id("number", "delta"),
+            "min_rh_entity": self._sibling_entity_id("number", "min_humidity"),
+            "max_rh_entity": self._sibling_entity_id("number", "max_humidity"),
+            "manual_runtime_entity": self._sibling_entity_id("number", "manual_runtime"),
+            "manual_pause_runtime_entity": self._sibling_entity_id("number", "manual_pause"),
         }
 
     async def async_turn_on(self, **kwargs) -> None:

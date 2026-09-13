@@ -12,6 +12,7 @@ import {
   toPositiveNumber,
   formatElapsedSince, // Додано для прямого оновлення часу
   deriveConfig,
+  hasEqualDerivedEntities,
 } from './dh-utils.js';
 
 const DEFAULT_BORDER_RADIUS = 28;
@@ -270,6 +271,7 @@ class MyDehumidifierCard extends LitElement {
   constructor() {
     super();
     this._config = null;
+    this._rawConfig = null;
     this._hass = null;
 
     this._timerInterval = null;
@@ -296,10 +298,11 @@ class MyDehumidifierCard extends LitElement {
   setConfig(config) {
     if (!config?.entity) throw new Error('Потрібно вказати entity');
 
-    this._config = deriveConfig({
+    this._rawConfig = {
       type: 'custom:ha-smart-dehumidifier',
       ...config,
-    });
+    };
+    this._config = deriveConfig(this._rawConfig, this._hass);
 
     this._trackedEntityIds = extractTrackedEntities(this._config);
     this._syncTicker();
@@ -316,6 +319,14 @@ class MyDehumidifierCard extends LitElement {
     const oldFanOn = this._isFanRunning(oldHass);
 
     this._hass = hass;
+
+    // Підтягти сутності, які обрані під час налаштування пристрою та створені ним самим (fan_entity, status_entity тощо), коли стани вже доступні. Оновлюємо лише при реальній зміні, щоб не ломати оптимізацію ререндерів нижче.
+    if (this._rawConfig) {
+      const nextConfig = deriveConfig(this._rawConfig, hass);
+      if (!hasEqualDerivedEntities(nextConfig, this._config)) {
+        this._config = nextConfig;
+      }
+    }
 
     const newFanOn = this._isFanRunning(hass);
     if (oldFanOn !== newFanOn) {
