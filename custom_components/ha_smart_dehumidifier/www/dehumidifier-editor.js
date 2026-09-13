@@ -1,6 +1,19 @@
 import { html, css, LitElement } from './files/lit-proxy.js';
 import { EDITOR_SCHEMA } from './visual-editor-config.js';
-import { AUTO_DERIVED_ENTITY_KEYS, deriveVerifiedEntities } from './dh-utils.js';
+import {
+  AUTO_DERIVED_ENTITY_KEYS,
+  deriveVerifiedEntities,
+  resolveDeviceHumidifierEntity,
+  resolveEntityDeviceId,
+  DEHUMIDIFIER_PLATFORM,
+} from './dh-utils.js';
+
+// Показує в пікері лише пристрої, які мають хоч одну сутність нашої
+// інтеграції (device.entities фільтруються за platform реєстру сутностей,
+// а не за доменом — так інші "humidifier" в системі не потраплять у список).
+function isOwnEntity(entity) {
+  return entity?.platform === DEHUMIDIFIER_PLATFORM;
+}
 
 const STORAGE_KEY = 'dh-editor-open-sections-v2';
 
@@ -606,11 +619,51 @@ class DehumidifierEditor extends LitElement {
     `;
   }
 
+  // Поле "Пристрій осушувача": користувач обирає ПРИСТРІЙ (як у Settings →
+  // Devices), а не entity_id напряму. Під капотом це все одно зберігається
+  // в config.entity (головна сутність `humidifier.*` цього пристрою) — уся
+  // інша логіка картки й похідних сутностей лишається без змін, змінюється
+  // лише те, що показує сам пікер.
+  _setDeviceValue(field, deviceId) {
+    const next = { ...this._config };
+    const resolvedEntity = resolveDeviceHumidifierEntity(this.hass, deviceId);
+
+    if (resolvedEntity) {
+      next[field.key] = resolvedEntity;
+    } else {
+      delete next[field.key];
+    }
+
+    this._emitConfig(next);
+  }
+
+  _renderDevice(field) {
+    const entityValue = this._fieldValue(field) || '';
+    const deviceId = resolveEntityDeviceId(this.hass, entityValue);
+
+    return html`
+      <div class="field">
+        <div class="field-head">
+          <div class="field-label">${field.label}</div>
+          ${this._renderReset(field)}
+        </div>
+
+        <ha-device-picker
+          .hass=${this.hass}
+          .value=${deviceId}
+          .entityFilter=${isOwnEntity}
+          @value-changed=${(e) => this._setDeviceValue(field, e.detail.value)}
+        ></ha-device-picker>
+      </div>
+    `;
+  }
+
   _renderField(field) {
     if (field.type === 'tog') return this._renderToggle(field);
     if (field.type === 'select') return this._renderSelect(field);
     if (field.type === 'num') return this._renderNumber(field);
     if (field.type === 'entity') return this._renderEntity(field);
+    if (field.type === 'device') return this._renderDevice(field);
     return this._renderText(field);
   }
 
