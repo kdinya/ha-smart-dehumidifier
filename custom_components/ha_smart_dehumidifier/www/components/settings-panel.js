@@ -3,10 +3,6 @@ import { html } from '../files/lit-proxy.js';
 export function renderSettingsPanel(card, config) {
   if (!card._isSettingsOpen) return html``;
 
-  if (card._openSections === undefined) {
-    card._openSections = { auto: true, manual: false };
-  }
-
   const hass = card._hass;
   if (!hass) return html``;
 
@@ -45,7 +41,10 @@ export function renderSettingsPanel(card, config) {
     });
 
   const toggleSection = (id) => {
-    card._openSections[id] = !card._openSections[id];
+    // Імутабельне оновлення: нова властивість-об'єкт замість мутації
+    // існуючого - так Lit гарантовано бачить зміну і перемальовує панель,
+    // навіть якщо requestUpdate() з якоїсь причини не спрацював би сам.
+    card._openSections = { ...card._openSections, [id]: !card._openSections[id] };
     card.requestUpdate();
   };
 
@@ -191,14 +190,14 @@ export function renderSettingsPanel(card, config) {
     <style>
       .sp-overlay { position: absolute; inset: 0; background: rgba(4, 8, 14, 0.72); backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 12px; animation: sp-in 0.28s cubic-bezier(0.22, 1, 0.36, 1) both; }
       @keyframes sp-in { from { opacity: 0; transform: scale(0.96) translateY(6px); } to { opacity: 1; transform: scale(1) translateY(0); } }
-      .sp-modal { width: 100%; max-width: 296px; max-height: 82%; background: linear-gradient(145deg, rgba(255,255,255,0.045) 0%, rgba(255,255,255,0.01) 100%); border: 1px solid rgba(255,255,255,0.09); border-radius: 22px; box-shadow: 0 2px 0 rgba(255,255,255,0.06) inset, 0 32px 64px rgba(0,0,0,0.7), 0 0 0 0.5px rgba(0,0,0,0.6); display: flex; flex-direction: column; overflow: hidden; font-family: 'SF Pro Display', 'Segoe UI', system-ui, sans-serif; }
+      .sp-modal { width: 100%; max-width: 296px; max-height: min(82%, 78dvh, 640px); background: linear-gradient(145deg, rgba(255,255,255,0.045) 0%, rgba(255,255,255,0.01) 100%); border: 1px solid rgba(255,255,255,0.09); border-radius: 22px; box-shadow: 0 2px 0 rgba(255,255,255,0.06) inset, 0 32px 64px rgba(0,0,0,0.7), 0 0 0 0.5px rgba(0,0,0,0.6); display: flex; flex-direction: column; overflow: hidden; font-family: 'SF Pro Display', 'Segoe UI', system-ui, sans-serif; }
       .sp-header { display: flex; align-items: center; justify-content: space-between; padding: 13px 16px 12px; background: rgba(0,0,0,0.25); border-bottom: 1px solid rgba(255,255,255,0.05); flex-shrink: 0; }
       .sp-title { display: flex; align-items: center; gap: 7px; font-size: 10px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,0.5); }
       .sp-title-dot { width: 6px; height: 6px; border-radius: 50%; background: #00d4ff; box-shadow: 0 0 8px #00d4ff; }
       .sp-close { width: 26px; height: 26px; border-radius: 9px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); color: rgba(255,255,255,0.4); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.15s, color 0.15s; }
       .sp-close:hover { background: rgba(255,255,255,0.1); color: #fff; }
       .sp-close ha-icon { --mdc-icon-size: 14px; }
-      .sp-scroll { padding: 10px; overflow-y: auto; flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 7px; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.08) transparent; -webkit-overflow-scrolling: touch; }
+      .sp-scroll { padding: 10px; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; touch-action: pan-y; flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 7px; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.08) transparent; -webkit-overflow-scrolling: touch; }
       .sp-scroll::-webkit-scrollbar { width: 3px; }
       .sp-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 10px; }
       .sp-panel { border-radius: 16px; border: 1px solid rgba(255,255,255,0.06); overflow: hidden; transition: border-color 0.25s; flex-shrink: 0; }

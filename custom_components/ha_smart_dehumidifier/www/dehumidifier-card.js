@@ -70,6 +70,7 @@ class MyDehumidifierCard extends LitElement {
     _targetHumidity: { state: true },
     _isSettingsOpen: { state: true },
     _humPanelAutoPopupOpen: { state: true },
+    _openSections: { state: true },
   };
 
   static styles = css`
@@ -77,6 +78,7 @@ class MyDehumidifierCard extends LitElement {
       display: flex;
       justify-content: center;
       width: 100%;
+      position: relative;
       container-type: inline-size;
     }
 
@@ -299,6 +301,7 @@ class MyDehumidifierCard extends LitElement {
     this._dragging = false;
     this._isSettingsOpen = false;
     this._humPanelAutoPopupOpen = false;
+    this._openSections = { auto: true, manual: false };
   }
 
   connectedCallback() {
@@ -369,7 +372,8 @@ class MyDehumidifierCard extends LitElement {
       changedProps.has('_config') ||
       changedProps.has('_targetHumidity') ||
       changedProps.has('_isSettingsOpen') ||
-      changedProps.has('_humPanelAutoPopupOpen')
+      changedProps.has('_humPanelAutoPopupOpen') ||
+      changedProps.has('_openSections')
     ) {
       return true;
     }
@@ -561,9 +565,9 @@ class MyDehumidifierCard extends LitElement {
             </div>
           </div>
         </div>
-
-        ${renderSettingsPanel(this, this._config)}
       </ha-card>
+
+      ${renderSettingsPanel(this, this._config)}
     `;
   }
 }
