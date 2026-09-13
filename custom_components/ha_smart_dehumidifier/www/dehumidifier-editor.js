@@ -1,17 +1,5 @@
 import { html, css, LitElement } from './files/lit-proxy.js';
 import { EDITOR_SCHEMA } from './visual-editor-config.js';
-import {
-  resolveDeviceHumidifierEntity,
-  resolveEntityDeviceId,
-  DEHUMIDIFIER_PLATFORM,
-} from './dh-utils.js';
-
-// Показує в пікері лише пристрої, які мають хоч одну сутність нашої
-// інтеграції (device.entities фільтруються за platform реєстру сутностей,
-// а не за доменом — так інші "humidifier" в системі не потраплять у список).
-function isOwnEntity(entity) {
-  return entity?.platform === DEHUMIDIFIER_PLATFORM;
-}
 
 const STORAGE_KEY = 'dh-editor-open-sections-v2';
 
@@ -382,6 +370,13 @@ class DehumidifierEditor extends LitElement {
         field.min ?? -Infinity,
         field.max ?? Infinity
       );
+    } else if (field.type === 'entity') {
+      const trimmed = String(rawValue ?? '').trim();
+      if (trimmed) {
+        next[field.key] = trimmed;
+      } else {
+        delete next[field.key];
+      }
     } else {
       next[field.key] = String(rawValue ?? '').trim();
     }
@@ -542,27 +537,12 @@ class DehumidifierEditor extends LitElement {
     `;
   }
 
-  // Поле "Пристрій осушувача": користувач обирає ПРИСТРІЙ (як у Settings →
-  // Devices), а не entity_id напряму. Під капотом це все одно зберігається
-  // в config.entity (головна сутність `humidifier.*` цього пристрою) — уся
-  // інша логіка картки й похідних сутностей лишається без змін, змінюється
-  // лише те, що показує сам пікер.
-  _setDeviceValue(field, deviceId) {
-    const next = { ...this._config };
-    const resolvedEntity = resolveDeviceHumidifierEntity(this.hass, deviceId);
-
-    if (resolvedEntity) {
-      next[field.key] = resolvedEntity;
-    } else {
-      delete next[field.key];
-    }
-
-    this._emitConfig(next);
-  }
-
-  _renderDevice(field) {
-    const entityValue = this._fieldValue(field) || '';
-    const deviceId = resolveEntityDeviceId(this.hass, entityValue);
+  // Поле "Пристрій" — обираємо саме створений пристрій HA Smart
+  // Dehumidifier: кожен створений пристрій має рівно одну сутність домену
+  // humidifier (з іменем, яке ви вказали при налаштуванні), тож звуження
+  // пікера до цього домену й дає по суті вибір "з наших пристроїв".
+  _renderEntity(field) {
+    const value = this._fieldValue(field) || '';
 
     return html`
       <div class="field">
@@ -571,12 +551,12 @@ class DehumidifierEditor extends LitElement {
           ${this._renderReset(field)}
         </div>
 
-        <ha-device-picker
+        <ha-entity-picker
           .hass=${this.hass}
-          .value=${deviceId}
-          .entityFilter=${isOwnEntity}
-          @value-changed=${(e) => this._setDeviceValue(field, e.detail.value)}
-        ></ha-device-picker>
+          .value=${value}
+          .includeDomains=${field.domain ? [field.domain] : undefined}
+          @value-changed=${(e) => this._setValue(field, e.detail.value)}
+        ></ha-entity-picker>
       </div>
     `;
   }
@@ -585,7 +565,7 @@ class DehumidifierEditor extends LitElement {
     if (field.type === 'tog') return this._renderToggle(field);
     if (field.type === 'select') return this._renderSelect(field);
     if (field.type === 'num') return this._renderNumber(field);
-    if (field.type === 'device') return this._renderDevice(field);
+    if (field.type === 'entity') return this._renderEntity(field);
     return this._renderText(field);
   }
 

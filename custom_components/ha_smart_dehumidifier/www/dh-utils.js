@@ -1,28 +1,3 @@
-export const DEHUMIDIFIER_PLATFORM = 'ha_smart_dehumidifier';
-
-// Знайти головну сутність (`humidifier.*`) створеного пристрою за його
-// device_id — потрібно для вкладки Сутності візуального редактора, де
-// користувач обирає сам ПРИСТРІЙ (а не entity_id напряму), і з нього вже
-// автоматично підтягуються fan_entity/current_humidity_entity/... .
-export function resolveDeviceHumidifierEntity(hass, deviceId) {
-  if (!hass?.entities || !deviceId) return '';
-
-  for (const [entityId, entry] of Object.entries(hass.entities)) {
-    if (entry?.device_id === deviceId && entityId.startsWith('humidifier.')) {
-      return entityId;
-    }
-  }
-
-  return '';
-}
-
-// Зворотне перетворення: за вже збереженим entity_id головної сутності
-// знайти device_id — щоб при відкритті редактора пікер пристрою показував
-// правильно обраний пристрій.
-export function resolveEntityDeviceId(hass, entityId) {
-  return (entityId && hass?.entities?.[entityId]?.device_id) || '';
-}
-
 export const DEFAULT_LAYOUT_BASE_WIDTH = 400;
 export const DEFAULT_CONTROLS_MAX_WIDTH = 520;
 export const TARGET_SYNC_GRACE_MS = 1800;
