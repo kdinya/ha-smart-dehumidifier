@@ -262,6 +262,22 @@ class MyDehumidifierCard extends LitElement {
     .dh-cog-btn ha-icon {
       --mdc-icon-size: 20px;
     }
+
+    .dh-not-configured {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 32px 16px;
+      text-align: center;
+      color: var(--secondary-text-color, rgba(255,255,255,0.6));
+    }
+
+    .dh-not-configured ha-icon {
+      --mdc-icon-size: 32px;
+      opacity: 0.6;
+    }
   `;
 
   static getConfigElement() {
@@ -296,8 +312,9 @@ class MyDehumidifierCard extends LitElement {
   }
 
   setConfig(config) {
-    if (!config?.entity) throw new Error('Потрібно вказати entity');
-
+    // Порожній/початковий конфіг (щойно додана картка, пристрій ще не
+    // обраний) не повинен кидати виняток — інакше падає рендер усього
+    // діалогу редагування картки, а не лише прев'ю.
     this._rawConfig = {
       type: 'custom:ha-smart-dehumidifier',
       ...config,
@@ -484,6 +501,17 @@ class MyDehumidifierCard extends LitElement {
 
   render() {
     if (!this._config || !this._hass) return html``;
+
+    if (!this._config.entity) {
+      return html`
+        <ha-card>
+          <div class="dh-not-configured">
+            <ha-icon icon="mdi:air-humidifier-off"></ha-icon>
+            <span>Оберіть пристрій «HA Smart Dehumidifier» у налаштуваннях картки</span>
+          </div>
+        </ha-card>
+      `;
+    }
 
     const layout = this._getLayoutData();
 
