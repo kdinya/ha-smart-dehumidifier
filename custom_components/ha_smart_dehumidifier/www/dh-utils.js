@@ -52,6 +52,29 @@ export function readHumidityTarget(card, entityId, fallback = 50) {
   return clamp(fallback, 0, 100);
 }
 
+export function deriveConfig(config = {}) {
+  // Для власного бекенду ha_smart_dehumidifier усі супутні сутності мають
+  // передбачуваний entity_id (той самий object_id, що й у entity), тож їх
+  // не потрібно вказувати вручну — досить обрати лише `entity`.
+  const objectId = typeof config.entity === 'string' ? config.entity.split('.')[1] : null;
+
+  const derived = objectId
+    ? {
+        status_entity: `sensor.${objectId}_status`,
+        calc_entity: `sensor.${objectId}_recommended_humidity`,
+        auto_entity: `switch.${objectId}_auto_mode`,
+        manual_script_entity: `button.${objectId}_manual_toggle`,
+        delta_entity: `number.${objectId}_delta`,
+        min_rh_entity: `number.${objectId}_min_humidity`,
+        max_rh_entity: `number.${objectId}_max_humidity`,
+        manual_runtime_entity: `number.${objectId}_manual_runtime`,
+        manual_pause_runtime_entity: `number.${objectId}_manual_pause`,
+      }
+    : {};
+
+  return { ...derived, ...config };
+}
+
 export function readCurrentHumidity(card, config = {}, fallback = 50) {
   const hass = card?._hass;
   const currentEntity =

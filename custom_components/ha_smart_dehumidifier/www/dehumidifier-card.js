@@ -10,7 +10,8 @@ import { renderSettingsPanel } from './components/settings-panel.js';
 import {
   toFiniteNumber,
   toPositiveNumber,
-  formatElapsedSince // Додано для прямого оновлення часу
+  formatElapsedSince, // Додано для прямого оновлення часу
+  deriveConfig,
 } from './dh-utils.js';
 
 const DEFAULT_BORDER_RADIUS = 28;
@@ -22,28 +23,6 @@ function normalizeAlign(value) {
   return value === 'left' || value === 'right' ? value : 'center';
 }
 
-function deriveConfig(config = {}) {
-  // Для власного бекенду ha_smart_dehumidifier усі супутні сутності мають
-  // передбачуваний entity_id (той самий object_id, що й у entity), тож їх
-  // не потрібно вказувати вручну — досить обрати лише `entity`.
-  const objectId = typeof config.entity === 'string' ? config.entity.split('.')[1] : null;
-
-  const derived = objectId
-    ? {
-        status_entity: `sensor.${objectId}_status`,
-        calc_entity: `sensor.${objectId}_recommended_humidity`,
-        auto_entity: `switch.${objectId}_auto_mode`,
-        manual_script_entity: `button.${objectId}_manual_toggle`,
-        delta_entity: `number.${objectId}_delta`,
-        min_rh_entity: `number.${objectId}_min_humidity`,
-        max_rh_entity: `number.${objectId}_max_humidity`,
-        manual_runtime_entity: `number.${objectId}_manual_runtime`,
-        manual_pause_runtime_entity: `number.${objectId}_manual_pause`,
-      }
-    : {};
-
-  return { ...derived, ...config };
-}
 
 function extractTrackedEntities(config = {}) {
   const ids = new Set();

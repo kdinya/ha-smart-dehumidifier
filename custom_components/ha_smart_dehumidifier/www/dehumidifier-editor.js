@@ -1,5 +1,6 @@
 import { html, css, LitElement } from './files/lit-proxy.js';
 import { EDITOR_SCHEMA } from './visual-editor-config.js';
+import { deriveConfig } from './dh-utils.js';
 
 const STORAGE_KEY = 'dh-editor-open-sections-v2';
 
@@ -340,11 +341,13 @@ class DehumidifierEditor extends LitElement {
 
   setConfig(config) {
     this._config = { ...config };
+    this._resolved = deriveConfig(this._config);
     this._openSections = buildInitialSections(this._openSections);
   }
 
   _fieldValue(field) {
-    const value = this._config?.[field.key];
+    const source = field.type === 'entity' ? this._resolved : this._config;
+    const value = source?.[field.key];
     return value !== undefined ? value : field.default;
   }
 
@@ -356,6 +359,7 @@ class DehumidifierEditor extends LitElement {
 
   _emitConfig(next) {
     this._config = next;
+    this._resolved = deriveConfig(next);
     fireEvent(this, 'config-changed', { config: next });
   }
 
