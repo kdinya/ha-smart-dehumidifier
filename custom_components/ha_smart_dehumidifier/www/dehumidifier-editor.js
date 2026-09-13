@@ -406,6 +406,17 @@ class DehumidifierEditor extends LitElement {
         field.min ?? -Infinity,
         field.max ?? Infinity
       );
+    } else if (field.type === 'entity') {
+      const trimmed = String(rawValue ?? '').trim();
+      if (trimmed) {
+        next[field.key] = trimmed;
+      } else {
+        // Порожнє значення з пікера не повинно назавжди ховати
+        // автопідтягнуту сутність (обрану при налаштуванні пристрою чи
+        // створену ним самим) — просто прибираємо ручне перевизначення,
+        // а не зберігаємо порожній рядок, який має пріоритет над авто.
+        delete next[field.key];
+      }
     } else {
       next[field.key] = String(rawValue ?? '').trim();
     }
