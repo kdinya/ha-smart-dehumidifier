@@ -8,8 +8,7 @@
           "name": "Name",
           "fan_entity": "Fan switch",
           "current_humidity_entity": "Humidity sensor (dehumidifier room)",
-          "abs_humidity_entity": "Absolute humidity sensor (adjacent room)",
-          "ref_temp_entity": "Temperature sensor (adjacent room)"
+          "abs_humidity_entity": "Humidity sensor (adjacent room), %"
         }
       }
     }
@@ -19,7 +18,7 @@
       "init": {
         "title": "Calculation & timer settings",
         "data": {
-          "delta": "Absolute humidity delta, g/m3 (3.5-4)",
+          "delta": "Humidity delta vs adjacent room, %",
           "min_humidity": "Minimum recommended humidity, %",
           "max_humidity": "Maximum recommended humidity, %",
           "dry_tolerance": "Hysteresis tolerance, %",
@@ -50,7 +49,7 @@
     },
     "number": {
       "delta": {
-        "name": "Absolute humidity delta"
+        "name": "Humidity delta"
       },
       "min_humidity": {
         "name": "Min recommended humidity"

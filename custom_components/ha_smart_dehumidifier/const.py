@@ -5,7 +5,6 @@ DOMAIN = "ha_smart_dehumidifier"
 CONF_FAN_ENTITY = "fan_entity"
 CONF_CURRENT_HUMIDITY_ENTITY = "current_humidity_entity"
 CONF_ABS_HUMIDITY_ENTITY = "abs_humidity_entity"
-CONF_REF_TEMP_ENTITY = "ref_temp_entity"
 
 CONF_DELTA = "delta"
 CONF_MIN_HUMIDITY = "min_humidity"
@@ -14,7 +13,7 @@ CONF_DRY_TOLERANCE = "dry_tolerance"
 CONF_MANUAL_RUNTIME = "manual_runtime"
 CONF_MANUAL_PAUSE = "manual_pause"
 
-DEFAULT_DELTA = 3.75  # г/м3, робочий діапазон 3.5-4
+DEFAULT_DELTA = 3.75  # відсоткові пункти понад вологість сусідньої кімнати
 DEFAULT_MIN_HUMIDITY = 65
 DEFAULT_MAX_HUMIDITY = 85
 DEFAULT_DRY_TOLERANCE = 5

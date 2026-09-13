@@ -274,10 +274,10 @@ export function renderSettingsPanel(card, config) {
 
                 <div class="sp-row">
                   <div class="sp-label-line">
-                    <span class="sp-label">Дельта AH</span>
-                    <span class="sp-val">${formatSliderValue(vals.delta, 0.1)} г/м³</span>
+                    <span class="sp-label">Дельта</span>
+                    <span class="sp-val">${formatSliderValue(vals.delta, 0.1)}%</span>
                   </div>
-                  <div class="sp-slider-wrap" @pointerdown=${(e) => startIntentDrag(e, entities.delta, ' г/м³', 0.1, 10, 0.1)} @pointermove=${moveIntentDrag} @pointerup=${endIntentDrag} @pointercancel=${cancelIntentDrag} @click=${blockTapChange}>
+                  <div class="sp-slider-wrap" @pointerdown=${(e) => startIntentDrag(e, entities.delta, '%', 0.1, 10, 0.1)} @pointermove=${moveIntentDrag} @pointerup=${endIntentDrag} @pointercancel=${cancelIntentDrag} @click=${blockTapChange}>
                     <input class="sp-slider" type="range" min="0.1" max="10" step="0.1" .value=${String(vals.delta)} tabindex="-1" disabled>
                   </div>
                 </div>

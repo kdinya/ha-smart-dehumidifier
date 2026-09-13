@@ -14,7 +14,6 @@ automations plus one script in the original Lovelace-card-only setup:
 from __future__ import annotations
 
 import logging
-import math
 import time
 
 from homeassistant.config_entries import ConfigEntry
@@ -33,7 +32,6 @@ from .const import (
     CONF_MANUAL_RUNTIME,
     CONF_MAX_HUMIDITY,
     CONF_MIN_HUMIDITY,
-    CONF_REF_TEMP_ENTITY,
     DEFAULT_DELTA,
     DEFAULT_DRY_TOLERANCE,
     DEFAULT_MANUAL_PAUSE,
@@ -96,7 +94,6 @@ class DehumidifierDevice:
         self.fan_entity = data.get(CONF_FAN_ENTITY)
         self.current_humidity_entity = data.get(CONF_CURRENT_HUMIDITY_ENTITY)
         self.abs_humidity_entity = data.get(CONF_ABS_HUMIDITY_ENTITY)
-        self.ref_temp_entity = data.get(CONF_REF_TEMP_ENTITY)
 
         self.delta = float(options.get(CONF_DELTA, DEFAULT_DELTA))
         self.min_humidity = int(options.get(CONF_MIN_HUMIDITY, DEFAULT_MIN_HUMIDITY))
@@ -122,7 +119,7 @@ class DehumidifierDevice:
         if rec is not None:
             self.target_humidity = rec
 
-        for entity_id in (self.abs_humidity_entity, self.ref_temp_entity, self.current_humidity_entity):
+        for entity_id in (self.abs_humidity_entity, self.current_humidity_entity):
             if entity_id:
                 self._unsub_listeners.append(
                     async_track_state_change_event(self.hass, entity_id, self._async_source_changed)
@@ -143,22 +140,28 @@ class DehumidifierDevice:
     # ------------------------------------------------------- recommendation
 
     def recommended_humidity(self) -> int | None:
-        """Дью-поінт розрахунок рекомендованої вологості (як у sensor.recommended_humidity)."""
-        abs_state = self.hass.states.get(self.abs_humidity_entity) if self.abs_humidity_entity else None
-        temp_state = self.hass.states.get(self.ref_temp_entity) if self.ref_temp_entity else None
-        if abs_state is None or temp_state is None:
+        """Рекомендована вологість = вологість сусідньої кімнати + дельта.
+
+        Ліміти min/max застосовуються лише коли увімкнено авто-режим.
+        Коли авто-режим вимкнено - ліміти ігноруються (результат лише
+        затиснутий у фізично можливих межах 0-100%).
+        """
+        neighbor_state = self.hass.states.get(self.abs_humidity_entity) if self.abs_humidity_entity else None
+        if neighbor_state is None:
             return None
 
         try:
-            abs_hum = float(abs_state.state)
-            temp = float(temp_state.state)
+            neighbor_humidity = float(neighbor_state.state)
         except (TypeError, ValueError):
             return None
 
-        target_abs = abs_hum + self.delta
-        es = 6.112 * math.exp((17.67 * temp) / (temp + 243.5))
-        rh = ((target_abs * (temp + 273.15)) / (216.7 * es)) * 100
-        result = max(self.min_humidity, min(rh, self.max_humidity))
+        result = neighbor_humidity + self.delta
+
+        if self.auto_mode:
+            result = _clamp(result, self.min_humidity, self.max_humidity)
+        else:
+            result = _clamp(result, 0, 100)
+
         return int(round(result))
 
     def current_humidity(self) -> float | None:

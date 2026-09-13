@@ -77,7 +77,7 @@ class DeltaNumber(_BaseNumber):
     _attr_native_min_value = 0
     _attr_native_max_value = 10
     _attr_native_step = 0.1
-    _attr_native_unit_of_measurement = "г/м³"
+    _attr_native_unit_of_measurement = "%"
     _device_attribute = "delta"
 
     def __init__(self, device: DehumidifierDevice, entry: ConfigEntry) -> None:
