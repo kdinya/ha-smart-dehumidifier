@@ -19,7 +19,6 @@ from .const import (
     CONF_MANUAL_RUNTIME,
     CONF_MAX_HUMIDITY,
     CONF_MIN_HUMIDITY,
-    CONF_REF_TEMP_ENTITY,
     DEFAULT_DELTA,
     DEFAULT_DRY_TOLERANCE,
     DEFAULT_MANUAL_PAUSE,
@@ -39,13 +38,10 @@ def _user_schema() -> vol.Schema:
             vol.Required(CONF_FAN_ENTITY): selector.EntitySelector(
                 selector.EntitySelectorConfig(domain="switch")
             ),
-            vol.Required(CONF_CURRENT_HUMIDITY_ENTITY): selector.EntitySelector(
+            vol.Optional(CONF_CURRENT_HUMIDITY_ENTITY): selector.EntitySelector(
                 selector.EntitySelectorConfig(domain="sensor")
             ),
-            vol.Required(CONF_ABS_HUMIDITY_ENTITY): selector.EntitySelector(
-                selector.EntitySelectorConfig(domain="sensor")
-            ),
-            vol.Required(CONF_REF_TEMP_ENTITY): selector.EntitySelector(
+            vol.Optional(CONF_ABS_HUMIDITY_ENTITY): selector.EntitySelector(
                 selector.EntitySelectorConfig(domain="sensor")
             ),
         }
