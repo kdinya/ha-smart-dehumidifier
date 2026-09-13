@@ -449,7 +449,15 @@ class MyDehumidifierCard extends LitElement {
     const controlsMax = toPositiveNumber(config.controls_max_width, 520);
     const curMax = toPositiveNumber(config.cur_max_width, 400);
     const heightPercent = toPositiveNumber(config.card_height_percent, DEFAULT_HEIGHT_PERCENT);
-    const frameRatioNum = 100 / heightPercent;
+    // Нижній відступ (content_padding_bottom) має РЕАЛЬНО додавати місце
+    // знизу (і збільшувати загальну висоту картки), а не просто стискати
+    // контент всередині незмінної за розміром рамки. Рамка (.dh-frame) і,
+    // на вузьких екранах, сама ha-card використовують той самий frameRatio,
+    // тож додаємо відступ як еквівалентний приріст висоти саме тут.
+    const padBottomPx = toFiniteNumber(config.content_padding_bottom, 16);
+    const extraHeightPercent = layoutBaseWidth > 0 ? (padBottomPx / layoutBaseWidth) * 100 : 0;
+    const effectiveHeightPercent = heightPercent + extraHeightPercent;
+    const frameRatioNum = 100 / effectiveHeightPercent;
     const glassRatio = toPositiveNumber(config.glass_aspect_ratio, 1.8);
     const align = normalizeAlign(config.alignment);
 
@@ -465,12 +473,12 @@ class MyDehumidifierCard extends LitElement {
       controlsMax,
       curMax,
       frameRatioNum,
-      frameRatio: `100 / ${heightPercent}`,
+      frameRatio: `100 / ${effectiveHeightPercent}`,
       glassRatio: String(glassRatio),
       alignClass: `align-${align}`,
       justifyContent,
       padTop: `${toFiniteNumber(config.content_padding_top, 0)}px`,
-      padBottom: `${toFiniteNumber(config.content_padding_bottom, 16)}px`,
+      padBottom: `${padBottomPx}px`,
       padLeft: `${toFiniteNumber(config.content_padding_left, 14)}px`,
       padRight: `${toFiniteNumber(config.content_padding_right, 14)}px`,
       offsetX: `${toFiniteNumber(config.device_offset_x, 0)}px`,
