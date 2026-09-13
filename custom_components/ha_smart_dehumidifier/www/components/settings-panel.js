@@ -21,6 +21,14 @@ export function renderSettingsPanel(card, config) {
     pause: config.manual_pause_runtime_entity,
   };
 
+  // Бекенд сам визначає режим порівняння (абсолютна вологість, г/м3 -
+  // коли налаштовано обидва датчики температури, інакше - відносна, %)
+  // і віддає правильну одиницю прямо в атрибуті number-сутності дельти.
+  // Дублювати цю логіку тут не треба - просто читаємо, що прийшло.
+  const deltaUnitRaw = hass.states[entities.delta]?.attributes?.unit_of_measurement;
+  const isAbsoluteDelta = deltaUnitRaw === 'g/m³' || deltaUnitRaw === 'г/м³';
+  const deltaUnit = isAbsoluteDelta ? ' г/м³' : '%';
+
   const vals = {
     delta: getVal(entities.delta, 3.75),
     min: getVal(entities.min, 65),
@@ -274,10 +282,10 @@ export function renderSettingsPanel(card, config) {
 
                 <div class="sp-row">
                   <div class="sp-label-line">
-                    <span class="sp-label">Дельта</span>
-                    <span class="sp-val">${formatSliderValue(vals.delta, 0.1)}%</span>
+                    <span class="sp-label">Дельта${isAbsoluteDelta ? ' (абс. вологість)' : ''}</span>
+                    <span class="sp-val">${formatSliderValue(vals.delta, 0.1)}${deltaUnit}</span>
                   </div>
-                  <div class="sp-slider-wrap" @pointerdown=${(e) => startIntentDrag(e, entities.delta, '%', 0.1, 10, 0.1)} @pointermove=${moveIntentDrag} @pointerup=${endIntentDrag} @pointercancel=${cancelIntentDrag} @click=${blockTapChange}>
+                  <div class="sp-slider-wrap" @pointerdown=${(e) => startIntentDrag(e, entities.delta, deltaUnit, 0.1, 10, 0.1)} @pointermove=${moveIntentDrag} @pointerup=${endIntentDrag} @pointercancel=${cancelIntentDrag} @click=${blockTapChange}>
                     <input class="sp-slider" type="range" min="0.1" max="10" step="0.1" .value=${String(vals.delta)} tabindex="-1" disabled>
                   </div>
                 </div>
