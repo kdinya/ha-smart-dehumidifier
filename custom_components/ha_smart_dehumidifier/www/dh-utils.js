@@ -48,6 +48,17 @@ export function isMainEntityOn(card, entityId) {
   return !!state && state !== 'off' && state !== 'unavailable' && state !== 'unknown';
 }
 
+// Статус "Підключення" — пристрій увімкнено, але датчик поточної
+// вологості ще не встиг віддати перше значення (типово перші секунди
+// після рестарту ХА). Використовується і для анімації "--", і для
+// приглушення картки, поки не все ще активне.
+export function isConnectingStatus(card, config = {}) {
+  const raw = String(getEntityState(card, config.status_entity)?.state ?? '')
+    .trim()
+    .toLowerCase();
+  return raw === 'connecting';
+}
+
 export function callHA(card, domain, service, data = {}) {
   if (!card?._hass) return;
   card._hass.callService(domain, service, data);

@@ -6,6 +6,7 @@ import {
   isMainEntityOn,
   readCurrentHumidity,
   getLayoutBaseWidth,
+  isConnectingStatus,
 } from '../dh-utils.js';
 
 // Глобальне завантаження локального шрифту (обхід ізоляції Shadow DOM)
@@ -109,6 +110,12 @@ export function renderCurrentHumidity(card, config = {}) {
   const mainShadow = isOn ? curGlowOn : 'none';
   const unitShadow = isOn ? '0 0 10px rgba(255,255,255,0.15)' : 'none';
 
+  // Поки датчик вологості ще не віддав перше значення (статус
+  // "Підключення") — замість статичних "--" показуємо два сегменти
+  // того самого шрифта, які по черзі "блимають", ніби індикатор іде
+  // вимірювання (як на цифровому приладі одразу після ввімкнення).
+  const isConnecting = !value.isReady && isConnectingStatus(card, config);
+
   return html`
     <style>
       .dh-cur-layer {
@@ -178,6 +185,20 @@ export function renderCurrentHumidity(card, config = {}) {
         margin-left: ${layoutUnit(curUnitMarginLeft, layoutBaseWidth)};
         text-shadow: ${unitShadow};
       }
+
+      @keyframes dh-cur-connecting-pulse {
+        0%, 100% { opacity: 0.25; }
+        50% { opacity: 1; }
+      }
+
+      .dh-cur-connecting-dash {
+        display: inline-block;
+        animation: dh-cur-connecting-pulse 1.2s ease-in-out infinite;
+      }
+
+      .dh-cur-connecting-dash:nth-child(2) {
+        animation-delay: 0.4s;
+      }
     </style>
 
     <div class="dh-cur-layer">
@@ -192,7 +213,11 @@ export function renderCurrentHumidity(card, config = {}) {
             openMoreInfo(card, infoEntityId);
           }}
         >
-          <span class="dh-cur-int">${value.intText}</span>
+          <span class="dh-cur-int">${
+            isConnecting
+              ? html`<span class="dh-cur-connecting-dash">-</span><span class="dh-cur-connecting-dash">-</span>`
+              : value.intText
+          }</span>
 
           ${curShowDecimal && value.hasDecimal
             ? html`<span class="dh-cur-dec">.${value.decText}</span>`

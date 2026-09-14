@@ -13,6 +13,7 @@ import {
   formatElapsedSince, // Додано для прямого оновлення часу
   deriveConfig,
   hasEqualDerivedEntities,
+  isConnectingStatus,
 } from './dh-utils.js';
 
 const DEFAULT_BORDER_RADIUS = 28;
@@ -632,6 +633,11 @@ class MyDehumidifierCard extends LitElement {
 
     const layout = this._getLayoutData();
 
+    // Поки датчик вологості не віддав перше значення (статус
+    // "Підключення") - трохи приглушуємо картку, щоб було видно, що не
+    // все ще активне (сама функціональність/дизайн не змінюються).
+    const isConnecting = isConnectingStatus(this, this._config);
+
     const cardStyle = `
       --dh-card-radius: ${layout.borderRadius}px;
       --dh-glass-ar-wide: ${layout.glassAspectRatio};
@@ -640,6 +646,7 @@ class MyDehumidifierCard extends LitElement {
       --dh-frame-ar-num: ${layout.frameRatioNum};
       --dh-pad-top: ${layout.padTop};
       --dh-pad-bottom: ${layout.padBottom};
+      ${isConnecting ? 'filter: brightness(0.55) saturate(0.85); transition: filter 0.6s ease;' : 'transition: filter 0.6s ease;'}
     `;
 
     const frameStyle = `
