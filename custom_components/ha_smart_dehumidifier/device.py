@@ -43,11 +43,11 @@ from .const import (
     DEFAULT_TARGET_HUMIDITY,
     DOMAIN,
     ENTITY_ID_PREFIX,
-    STATUS_DRYING,
-    STATUS_DRYING_MANUAL,
+    STATUS_AUTO,
     STATUS_IDLE,
     STATUS_MANUAL,
     STATUS_OFF,
+    STATUS_ON,
     STATUS_PAUSE,
 )
 
@@ -229,16 +229,26 @@ class DehumidifierDevice:
 
     @property
     def status(self) -> str:
+        """Видимий статус пристрою.
+
+        - off: вимкнено (кнопка OFF)
+        - manual: ручний режим (права кнопка), поки що працює таймер
+        - pause: ручний режим щойно вимкнено вручну - коротка пауза перед
+          тим, як знову запрацює автовизначення фізичного перемикача
+        - auto: авто-режим увімкнений і вентилятор фактично працює
+        - on: авто-режим вимкнений, пристрій увімкнено (середня кнопка),
+          вентилятор фактично працює
+        - idle ("очікування"): увімкнено, вентилятор не працює - вологість
+          ще не досягла цілі. Стосується як авто-, так і не-авто режиму.
+        """
         if not self.is_on:
             return STATUS_OFF
         if self._pause_active:
             return STATUS_PAUSE
-        if self._manual_active and self.auto_request:
-            return STATUS_DRYING_MANUAL
         if self._manual_active:
             return STATUS_MANUAL
         if self.auto_request:
-            return STATUS_DRYING
+            return STATUS_AUTO if self.auto_mode else STATUS_ON
         return STATUS_IDLE
 
     @property

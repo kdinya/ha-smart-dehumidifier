@@ -13,8 +13,9 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import DOMAIN, STATUS_DRYING, STATUS_DRYING_MANUAL, STATUS_MANUAL, STATUS_OFF
+from .const import DOMAIN, STATUS_AUTO, STATUS_MANUAL, STATUS_OFF, STATUS_ON
 from .device import DehumidifierDevice
 
 
@@ -25,7 +26,7 @@ async def async_setup_entry(
     async_add_entities([DehumidifierHumidifierEntity(device, entry)])
 
 
-class DehumidifierHumidifierEntity(HumidifierEntity):
+class DehumidifierHumidifierEntity(HumidifierEntity, RestoreEntity):
     _attr_has_entity_name = True
     _attr_name = None
     _attr_device_class = HumidifierDeviceClass.DEHUMIDIFIER
@@ -48,6 +49,30 @@ class DehumidifierHumidifierEntity(HumidifierEntity):
         self.async_on_remove(
             async_dispatcher_connect(self.hass, self._device.signal, self._handle_update)
         )
+
+        # Відновлення стану після рестарту ХА: увімкнено/вимкнено, ціль
+        # вологості й авто-режим - все, ЩО НЕ пов'язане з ручним режимом.
+        # Ручний режим (і пов'язана з ним пауза) навмисно НЕ відновлюється -
+        # _manual_active/_pause_active й так завжди стартують як False
+        # (див. DehumidifierDevice.__init__), тож після рестарту статус сам
+        # природно розрахується як "очікування" або "авто"/"он" - залежно
+        # від поточної вологості, без жодного спеціального коду для цього.
+        last_state = await self.async_get_last_state()
+        if last_state is not None and last_state.state in ("on", "off"):
+            self._device.is_on = last_state.state == "on"
+
+            humidity = last_state.attributes.get("humidity")
+            if humidity is not None:
+                try:
+                    self._device.target_humidity = int(float(humidity))
+                except (TypeError, ValueError):
+                    pass
+
+            auto_mode = last_state.attributes.get("auto_mode")
+            if isinstance(auto_mode, bool):
+                self._device.auto_mode = auto_mode
+
+            self._device.recompute()
 
     @callback
     def _handle_update(self) -> None:
@@ -82,7 +107,7 @@ class DehumidifierHumidifierEntity(HumidifierEntity):
         status = self._device.status
         if status == STATUS_OFF:
             return HumidifierAction.OFF
-        if status in (STATUS_DRYING, STATUS_DRYING_MANUAL, STATUS_MANUAL):
+        if status in (STATUS_ON, STATUS_AUTO, STATUS_MANUAL):
             return HumidifierAction.DRYING
         return HumidifierAction.IDLE
 

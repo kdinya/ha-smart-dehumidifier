@@ -45,7 +45,7 @@ class _BaseSensor(SensorEntity):
 
 
 class DehumidifierStatusSensor(_BaseSensor):
-    """Raw state: off / idle / manual / drying / drying_manual / pause."""
+    """Raw state: off / on / auto / idle / manual / pause."""
 
     _attr_translation_key = "status"
     _attr_icon = "mdi:air-filter"

@@ -30,11 +30,11 @@ DEFAULT_TARGET_HUMIDITY = 70
 ENTITY_ID_PREFIX = "smart"
 
 STATUS_OFF = "off"
-STATUS_IDLE = "idle"
-STATUS_MANUAL = "manual"
-STATUS_DRYING = "drying"
-STATUS_DRYING_MANUAL = "drying_manual"
-STATUS_PAUSE = "pause"
+STATUS_ON = "on"  # увімкнено вручну (середня кнопка), авто-режим вимкнений, вентилятор працює
+STATUS_AUTO = "auto"  # авто-режим увімкнений і вентилятор працює
+STATUS_IDLE = "idle"  # "очікування": увімкнено, вентилятор не працює (незалежно від авто-режиму)
+STATUS_MANUAL = "manual"  # ручний режим (права кнопка) - поки що працює таймер
+STATUS_PAUSE = "pause"  # ручний режим щойно вимкнено вручну - коротка пауза перед повторним автовизначенням
 
 PLATFORMS = ["humidifier", "sensor", "switch", "button", "number"]
 

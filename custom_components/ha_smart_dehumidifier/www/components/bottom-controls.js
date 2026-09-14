@@ -29,15 +29,15 @@ const STATUS_MAP = {
     color: '#ffc600',
     manualActive: true,
   },
-  drying: {
-    label: 'Авто',
+  on: {
+    label: 'Он',
     color: 'var(--state-humidifier-color, #00bfff)',
     manualActive: false,
   },
-  drying_manual: {
-    label: 'Авто/Ручний',
+  auto: {
+    label: 'Авто',
     color: '#7ee7ff',
-    manualActive: true,
+    manualActive: false,
   },
   pause: {
     label: 'Пауза',
@@ -77,6 +77,9 @@ function getControlState(card, config) {
 
   return {
     mainOn: isMainEntityOn(card, config?.entity),
+    // Кнопка ON підсвічена для: он, авто, пауза, очікування - тобто для
+    // будь-якого "увімкнено", КРІМ ручного режиму (в нього своя кнопка).
+    onButtonLit: isMainEntityOn(card, config?.entity) && status.state !== 'manual',
     fanOn: isEntityOn(card, config?.fan_entity),
     manualActive: status.manualActive,
     status,
@@ -154,7 +157,7 @@ export function renderBottomControls(card, config = {}) {
   );
 
   const state = getControlState(card, config);
-  const { mainOn, manualActive, status } = state;
+  const { mainOn, onButtonLit, manualActive, status } = state;
 
   const timerText = getRuntimeText(card, config);
 
@@ -367,7 +370,7 @@ export function renderBottomControls(card, config = {}) {
         </button>
 
         <button
-          class="dh-hill-btn dh-btn-center ${mainOn ? 'active' : ''}"
+          class="dh-hill-btn dh-btn-center ${onButtonLit ? 'active' : ''}"
           type="button"
           @click=${() => handlePower(card, config, 'on', state)}
         >
@@ -380,9 +383,9 @@ export function renderBottomControls(card, config = {}) {
               : html`
                   <ha-icon
                     icon="${onIcon}"
-                    class="${mainOn ? 'dh-main-lit-icon' : ''}"
+                    class="${onButtonLit ? 'dh-main-lit-icon' : ''}"
                   ></ha-icon>
-                  <span class="dh-hill-label ${mainOn ? 'dh-main-lit' : ''}">
+                  <span class="dh-hill-label ${onButtonLit ? 'dh-main-lit' : ''}">
                     ${onLabel}
                   </span>
                 `}
