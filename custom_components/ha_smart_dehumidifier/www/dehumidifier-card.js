@@ -114,37 +114,6 @@ class MyDehumidifierCard extends LitElement {
         aspect-ratio: var(--dh-glass-ar-wide, 1.8);
         container-type: size;
       }
-
-      /*
-       * На широких екранах висота ha-card ФІКСОВАНА (aspect-ratio вище),
-       * тож .dh-frame-aspect більше не може диктувати висоту через власний
-       * aspect-ratio (heightPercent) - якщо вона не збігається з реальною
-       * висотою картки, пристрій або обрізається зверху/знизу, або
-       * лишає зайвий простір. Замість цього .dh-frame і .dh-frame-aspect
-       * розтягуються на всю РЕАЛЬНО доступну висоту картки, а сам
-       * .dh-device вписується в неї через min(95cqmin, ...) - це завжди
-       * враховує І ширину, І висоту фактичного контейнера, тож пристрій
-       * гарантовано не обрізається на жодній орієнтації/розмірі екрана.
-       */
-      .dh-frame {
-        height: 100%;
-      }
-
-      .dh-frame-aspect {
-        aspect-ratio: unset;
-        flex: 1 1 auto;
-        min-height: 0;
-      }
-
-      /* Вирівнювання (ліворуч/по центру/праворуч) - навмисний "леттербоксинг"
-         лише для широких екранів (десктоп/планшет-альбом). На вузьких
-         екранах .dh-device й так займає майже всю доступну ширину - зсув
-         margin з'їдав невеликий запас цілком в один бік, і пристрій
-         "притискався" до вибраного краю замість однакових полів
-         зліва/справа, тож там ці правила НЕ застосовуються. */
-      .dh-frame.align-left .dh-device { margin-left: 0; margin-right: auto; }
-      .dh-frame.align-center .dh-device { margin-left: auto; margin-right: auto; }
-      .dh-frame.align-right .dh-device { margin-left: auto; margin-right: 0; }
     }
 
     .dh-card-bg,
@@ -287,6 +256,49 @@ class MyDehumidifierCard extends LitElement {
       margin: 0 auto;
       transform: translate(var(--dh-offset-x, 0px), var(--dh-offset-y, 0px));
       container-type: inline-size;
+    }
+
+    /*
+     * ВАЖЛИВО: цей блок навмисно розташований ПІСЛЯ базових правил
+     * .dh-frame / .dh-frame-aspect / .dh-device вище. При однаковій
+     * специфічності селекторів CSS-каскад віддає перевагу правилу, яке
+     * йде ПІЗНІШЕ в коді - тож якщо цей @container-override поставити
+     * ДО базових правил (як було раніше), базові aspect-ratio/flex
+     * "перебивають" override навіть коли умова контейнера виконується,
+     * і пристрій знову обрізається. Розташування тут гарантує, що на
+     * широких екранах саме ці правила виграють.
+     *
+     * Суть фіксу: на широких екранах (>=480px) висота ha-card ФІКСОВАНА
+     * через aspect-ratio (див. вище), тож .dh-frame-aspect більше не
+     * повинен сам диктувати висоту через власний aspect-ratio
+     * (heightPercent) - якщо вона не збігається з реальною висотою
+     * картки, пристрій обрізається зверху/знизу. Натомість .dh-frame і
+     * .dh-frame-aspect розтягуються на всю РЕАЛЬНО доступну висоту
+     * картки, а сам .dh-device вписується в неї через min(95cqmin, ...) -
+     * це завжди враховує і ширину, і висоту фактичного контейнера, тож
+     * пристрій гарантовано не обрізається на жодній орієнтації/розмірі
+     * екрана (телефон/планшет, портрет/альбом).
+     */
+    @container (min-width: 480px) {
+      .dh-frame {
+        height: 100%;
+      }
+
+      .dh-frame-aspect {
+        aspect-ratio: unset;
+        flex: 1 1 auto;
+        min-height: 0;
+      }
+
+      /* Вирівнювання (ліворуч/по центру/праворуч) - навмисний "леттербоксинг"
+         лише для широких екранів (десктоп/планшет-альбом). На вузьких
+         екранах .dh-device й так займає майже всю доступну ширину - зсув
+         margin з'їдав невеликий запас цілком в один бік, і пристрій
+         "притискався" до вибраного краю замість однакових полів
+         зліва/справа, тож там ці правила НЕ застосовуються. */
+      .dh-frame.align-left .dh-device { margin-left: 0; margin-right: auto; }
+      .dh-frame.align-center .dh-device { margin-left: auto; margin-right: auto; }
+      .dh-frame.align-right .dh-device { margin-left: auto; margin-right: 0; }
     }
 
     .dh-limit-layer {
