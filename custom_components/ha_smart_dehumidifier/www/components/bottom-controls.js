@@ -18,36 +18,49 @@ const STATUS_MAP = {
     label: 'Вимкнено',
     color: 'rgba(255,77,77,0.85)',
     manualActive: false,
+    isConnecting: false,
+  },
+  connecting: {
+    label: 'Підключення',
+    color: 'rgba(255,255,255,0.4)',
+    manualActive: false,
+    isConnecting: true,
   },
   idle: {
     label: 'Очікування',
     color: '#ffb84d',
     manualActive: false,
+    isConnecting: false,
   },
   manual: {
     label: 'Ручний',
     color: '#ffc600',
     manualActive: true,
+    isConnecting: false,
   },
   manual_auto: {
     label: 'Авто/Ручний',
     color: '#ffc600',
     manualActive: true,
+    isConnecting: false,
   },
   auto: {
     label: 'Авто',
     color: '#7ee7ff',
     manualActive: false,
+    isConnecting: false,
   },
   pause: {
     label: 'Пауза',
     color: '#a0a0a0',
     manualActive: false,
+    isConnecting: false,
   },
   unknown: {
     label: 'Невідомо',
     color: 'rgba(255,255,255,0.45)',
     manualActive: false,
+    isConnecting: false,
   },
 };
 
@@ -69,6 +82,7 @@ function getStatusData(card, config) {
     label: displayLabel,
     color: mapped.color,
     manualActive: mapped.manualActive,
+    isConnecting: mapped.isConnecting,
   };
 }
 
@@ -79,8 +93,9 @@ function getControlState(card, config) {
     mainOn: isMainEntityOn(card, config?.entity),
     // Кнопка ON підсвічена для: авто, пауза, очікування - тобто для
     // будь-якого "увімкнено", КРІМ ручного режиму (manual/manual_auto -
-    // в нього своя кнопка).
-    onButtonLit: isMainEntityOn(card, config?.entity) && !status.manualActive,
+    // в нього своя кнопка) і "Підключення" (даних ще немає, пристрій
+    // виглядає неактивним, поки не прийде перший реальний стан датчика).
+    onButtonLit: isMainEntityOn(card, config?.entity) && !status.manualActive && !status.isConnecting,
     fanOn: isEntityOn(card, config?.fan_entity),
     manualActive: status.manualActive,
     status,

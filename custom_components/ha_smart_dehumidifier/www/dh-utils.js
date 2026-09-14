@@ -133,21 +133,34 @@ export function hasEqualDerivedEntities(a, b) {
   return true;
 }
 
-export function readCurrentHumidity(card, config = {}, fallback = 50) {
+export function readCurrentHumidity(card, config = {}) {
   const hass = card?._hass;
   const currentEntity =
     config.current_humidity_entity ||
     config.humidity_entity ||
     config.current_entity;
 
-  if (currentEntity && hass?.states?.[currentEntity]) {
-    return clamp(hass.states[currentEntity].state, 0, 100);
+  if (currentEntity) {
+    const stateObj = hass?.states?.[currentEntity];
+    if (!stateObj || stateObj.state === 'unavailable' || stateObj.state === 'unknown') {
+      return null;
+    }
+    const num = Number(stateObj.state);
+    return Number.isFinite(num) ? clamp(num, 0, 100) : null;
   }
 
-  const attrs = getEntityState(card, config.entity)?.attributes || {};
-  if (attrs.current_humidity !== undefined) return clamp(attrs.current_humidity, 0, 100);
-  if (attrs.humidity !== undefined) return clamp(attrs.humidity, 0, 100);
-  return clamp(fallback, 0, 100);
+  const mainState = getEntityState(card, config.entity);
+  if (!mainState || mainState.state === 'unavailable' || mainState.state === 'unknown') {
+    return null;
+  }
+  const attrs = mainState.attributes || {};
+  if (attrs.current_humidity !== undefined && attrs.current_humidity !== null) {
+    return clamp(attrs.current_humidity, 0, 100);
+  }
+  if (attrs.humidity !== undefined && attrs.humidity !== null) {
+    return clamp(attrs.humidity, 0, 100);
+  }
+  return null;
 }
 
 export function formatElapsedSince(lastChanged, now = Date.now()) {

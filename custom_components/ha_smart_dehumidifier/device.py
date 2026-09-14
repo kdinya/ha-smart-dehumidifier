@@ -44,6 +44,7 @@ from .const import (
     DOMAIN,
     ENTITY_ID_PREFIX,
     STATUS_AUTO,
+    STATUS_CONNECTING,
     STATUS_IDLE,
     STATUS_MANUAL,
     STATUS_MANUAL_AUTO,
@@ -232,14 +233,17 @@ class DehumidifierDevice:
         """Видимий статус пристрою.
 
         - off: вимкнено (кнопка OFF)
+        - pause: ручний режим щойно вимкнено вручну - коротка пауза перед
+          тим, як знову запрацює автовизначення фізичного перемикача
         - manual: ручний режим (права кнопка), вологість ще НЕ спрацювала
           (fan_should_run тримається лише завдяки ручному таймеру)
         - manual_auto: ручний режим і вологість вже спрацювала одночасно
-        - pause: ручний режим щойно вимкнено вручну - коротка пауза перед
-          тим, як знову запрацює автовизначення фізичного перемикача
-        - auto: вентилятор фактично працює через вологість (гістерезис) -
-          незалежно від того, чи увімкнений перемикач авто-синхронізації
-          цілі (auto_mode)
+        - connecting: увімкнено, але датчик поточної вологості ще
+          недоступний (типово - перші секунди після рестарту ХА, поки
+          зовнішні інтеграції/датчики не встигли опублікувати стан).
+          pause/manual сюди не потрапляють - вони керуються користувачем
+          напряму і не залежать від датчика вологості.
+        - auto: вентилятор фактично працює через вологість (гістерезис)
         - idle ("очікування"): увімкнено, вентилятор не працює - вологість
           ще не досягла цілі
         """
@@ -249,6 +253,8 @@ class DehumidifierDevice:
             return STATUS_PAUSE
         if self._manual_active:
             return STATUS_MANUAL_AUTO if self.auto_request else STATUS_MANUAL
+        if self.current_humidity() is None:
+            return STATUS_CONNECTING
         if self.auto_request:
             return STATUS_AUTO
         return STATUS_IDLE

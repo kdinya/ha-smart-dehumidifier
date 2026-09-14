@@ -28,6 +28,9 @@ if (!document.getElementById('dh-local-7seg-font')) {
 const DEFAULT_HUMIDITY = 50;
 
 function splitHumidity(value) {
+  if (value === null || value === undefined) {
+    return { intText: '--', decText: '0', hasDecimal: false, isReady: false };
+  }
   const rounded = Math.round(toFiniteNumber(value, DEFAULT_HUMIDITY) * 10);
   const intPart = Math.trunc(rounded / 10);
   const decPart = Math.abs(rounded % 10);
@@ -36,6 +39,7 @@ function splitHumidity(value) {
     intText: String(intPart),
     decText: String(decPart),
     hasDecimal: decPart !== 0,
+    isReady: true,
   };
 }
 
@@ -69,7 +73,7 @@ export function renderCurrentHumidity(card, config = {}) {
   );
 
   const isOn = isMainEntityOn(card, config.entity);
-  const currentHumidity = readCurrentHumidity(card, config, DEFAULT_HUMIDITY);
+  const currentHumidity = readCurrentHumidity(card, config);
   const value = splitHumidity(currentHumidity);
   const infoEntityId = getHumidityInfoEntity(config);
 
@@ -198,7 +202,7 @@ export function renderCurrentHumidity(card, config = {}) {
             ? html`<span class="dh-cur-dec">.${value.decText}</span>`
             : html``}
 
-          ${curShowUnit
+          ${curShowUnit && value.isReady
             ? html`<span class="dh-cur-unit">%</span>`
             : html``}
         </button>

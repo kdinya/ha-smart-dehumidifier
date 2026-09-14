@@ -269,8 +269,9 @@ export function renderArcSlider(card, config = {}) {
 
   const isOn = isMainEntityOn(card, config.entity);
   const targetValue = clamp(card._targetHumidity, 0, 100);
-  const currentValue = readCurrentHumidity(card, config, targetValue);
-  const arc = buildArcState(card, arcConfig, currentValue, targetValue);
+  const currentValue = readCurrentHumidity(card, config);
+  const isCurrentReady = currentValue !== null;
+  const arc = buildArcState(card, arcConfig, isCurrentReady ? currentValue : 0, targetValue);
 
   const activeArcColor = arcConfig.arc_tgt_color_on;
 
