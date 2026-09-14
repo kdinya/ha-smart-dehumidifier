@@ -114,6 +114,37 @@ class MyDehumidifierCard extends LitElement {
         aspect-ratio: var(--dh-glass-ar-wide, 1.8);
         container-type: size;
       }
+
+      /*
+       * На широких екранах висота ha-card ФІКСОВАНА (aspect-ratio вище),
+       * тож .dh-frame-aspect більше не може диктувати висоту через власний
+       * aspect-ratio (heightPercent) - якщо вона не збігається з реальною
+       * висотою картки, пристрій або обрізається зверху/знизу, або
+       * лишає зайвий простір. Замість цього .dh-frame і .dh-frame-aspect
+       * розтягуються на всю РЕАЛЬНО доступну висоту картки, а сам
+       * .dh-device вписується в неї через min(95cqmin, ...) - це завжди
+       * враховує І ширину, І висоту фактичного контейнера, тож пристрій
+       * гарантовано не обрізається на жодній орієнтації/розмірі екрана.
+       */
+      .dh-frame {
+        height: 100%;
+      }
+
+      .dh-frame-aspect {
+        aspect-ratio: unset;
+        flex: 1 1 auto;
+        min-height: 0;
+      }
+
+      /* Вирівнювання (ліворуч/по центру/праворуч) - навмисний "леттербоксинг"
+         лише для широких екранів (десктоп/планшет-альбом). На вузьких
+         екранах .dh-device й так займає майже всю доступну ширину - зсув
+         margin з'їдав невеликий запас цілком в один бік, і пристрій
+         "притискався" до вибраного краю замість однакових полів
+         зліва/справа, тож там ці правила НЕ застосовуються. */
+      .dh-frame.align-left .dh-device { margin-left: 0; margin-right: auto; }
+      .dh-frame.align-center .dh-device { margin-left: auto; margin-right: auto; }
+      .dh-frame.align-right .dh-device { margin-left: auto; margin-right: 0; }
     }
 
     .dh-card-bg,
@@ -198,14 +229,14 @@ class MyDehumidifierCard extends LitElement {
     }
 
     .dh-frame {
-      /* Ширина - явне значення в пікселях, пораховане в JS з РЕАЛЬНО
-         виміряного (ResizeObserver) розміру ha-card (див. _getLayoutData) -
-         так пристрій завжди вписується і по ширині, і по висоті, без
-         крихких CSS-трюків (container query block-одиниці й
-         flex-shrink+aspect-ratio виявились нестабільними у вкладеному
-         Shadow DOM і давали то обрізання, то повне зникнення пристрою).
-         До першого вимірювання - безпечний CSS-фолбек (min(100%, maxW)). */
-      width: var(--dh-frame-width, min(100%, var(--dh-frame-max-width, 400px)));
+      /* Ширина обмежена configurable максимумом (layoutBaseWidth), але
+         ніколи не ширша за саму картку. На вузьких екранах ця ширина й
+         визначає висоту .dh-frame-aspect (через aspect-ratio нижче); на
+         широких - висота вже фіксована самою ha-card (@container вище),
+         і .dh-frame просто розтягується під неї. Ніяких JS-вимірювань
+         (ResizeObserver) не потрібно: min(95cqmin, ...) на .dh-device
+         сам враховує і ширину, і висоту реального контейнера. */
+      width: min(100%, var(--dh-frame-max-width, 400px));
       display: flex;
       flex-direction: column;
       position: relative;
@@ -257,16 +288,6 @@ class MyDehumidifierCard extends LitElement {
       transform: translate(var(--dh-offset-x, 0px), var(--dh-offset-y, 0px));
       container-type: inline-size;
     }
-
-    .dh-frame.align-left .dh-device { margin-left: 0; margin-right: auto; }
-    .dh-frame.align-center .dh-device { margin-left: auto; margin-right: auto; }
-    .dh-frame.align-right .dh-device { margin-left: auto; margin-right: 0; }
-
-    /* Вирівнювання (ліворуч/по центру/праворуч) застосовується лише на
-       широких екранах (леттербоксинг для десктопу). На вузьких екранах
-       .dh-device й так займає майже всю доступну ширину - зсув margin
-       з'їдав невеликий запас цілком в один бік, і пристрій "притискався"
-       до вибраного краю замість однакових полів зліва/справа. */
 
     .dh-limit-layer {
       position: absolute;
@@ -354,15 +375,6 @@ class MyDehumidifierCard extends LitElement {
     this._isSettingsOpen = false;
     this._humPanelAutoPopupOpen = false;
     this._openSections = { auto: true, manual: false };
-
-    // Фактичний розмір ha-card (вимірюється ResizeObserver-ом нижче).
-    // Потрібен, щоб надійно вписати пристрій у картку і по ширині, і по
-    // висоті одночасно (без крихких CSS-трюків на основі container query
-    // block-одиниць, які виявились нестабільними у вкладеному Shadow DOM).
-    this._cardBoxW = 0;
-    this._cardBoxH = 0;
-    this._cardResizeObserver = null;
-    this._observedCardEl = null;
   }
 
   connectedCallback() {
@@ -372,51 +384,7 @@ class MyDehumidifierCard extends LitElement {
 
   disconnectedCallback() {
     this._stopTicker();
-    this._teardownCardResizeObserver();
     super.disconnectedCallback();
-  }
-
-  updated() {
-    this._setupCardResizeObserver();
-  }
-
-  _setupCardResizeObserver() {
-    if (!this.shadowRoot) return;
-    const cardEl = this.shadowRoot.querySelector('ha-card');
-    if (!cardEl || cardEl === this._observedCardEl) return;
-
-    if (!this._cardResizeObserver) {
-      this._cardResizeObserver = new ResizeObserver((entries) => {
-        const entry = entries[0];
-        if (!entry) return;
-        const box = entry.contentBoxSize?.[0];
-        const w = box ? box.inlineSize : entry.contentRect.width;
-        const h = box ? box.blockSize : entry.contentRect.height;
-
-        // Оновлюємо лише при реальній зміні (цілі пікселі) - щоб не
-        // спричиняти зайві ре-рендери на кожен мікро-фрейм.
-        const nw = Math.round(w);
-        const nh = Math.round(h);
-        if (nw === this._cardBoxW && nh === this._cardBoxH) return;
-
-        this._cardBoxW = nw;
-        this._cardBoxH = nh;
-        this.requestUpdate();
-      });
-    } else {
-      this._cardResizeObserver.disconnect();
-    }
-
-    this._observedCardEl = cardEl;
-    this._cardResizeObserver.observe(cardEl);
-  }
-
-  _teardownCardResizeObserver() {
-    if (this._cardResizeObserver) {
-      this._cardResizeObserver.disconnect();
-      this._cardResizeObserver = null;
-    }
-    this._observedCardEl = null;
   }
 
   setConfig(config) {
@@ -567,27 +535,6 @@ class MyDehumidifierCard extends LitElement {
     const padTopPx = toFiniteNumber(config.content_padding_top, 0);
     const padBottomPx = toFiniteNumber(config.content_padding_bottom, 0);
 
-    // Ширина рамки: рахуємо в JS з РЕАЛЬНО виміряного (ResizeObserver)
-    // розміру ha-card - надійно вписує пристрій в обидва виміри одночасно,
-    // без крихких CSS container-query block-одиниць (cqb), які у вкладеному
-    // Shadow DOM/кастомному елементі давали нестабільний результат.
-    // isWide відповідає тому самому порогу 480px, що й @container-запит
-    // для ha-card (фіксований aspect-ratio на широких екранах).
-    const availW = this._cardBoxW;
-    const availH = this._cardBoxH;
-    const isWide = availW >= 480;
-
-    let frameWidthPx = null;
-    if (availW > 0) {
-      if (isWide && availH > 0) {
-        const usableH = availH - padTopPx - padBottomPx;
-        const heightBasedW = usableH > 0 ? usableH * frameRatioNum : availW;
-        frameWidthPx = Math.min(availW, heightBasedW, layoutBaseWidth);
-      } else {
-        frameWidthPx = Math.min(availW, layoutBaseWidth);
-      }
-    }
-
     return {
       borderRadius,
       glassMaxWidth,
@@ -597,9 +544,6 @@ class MyDehumidifierCard extends LitElement {
       curMax,
       frameRatioNum,
       frameRatio,
-      // До першого вимірювання ResizeObserver-ом (перший рендер) - безпечний
-      // CSS-фолбек, як і раніше, щоб нічого не "блимало" порожнім.
-      frameWidth: frameWidthPx !== null ? `${frameWidthPx}px` : `min(100%, ${layoutBaseWidth}px)`,
       glassRatio: String(glassRatio),
       alignClass: `align-${align}`,
       justifyContent,
@@ -666,7 +610,6 @@ class MyDehumidifierCard extends LitElement {
 
     const frameStyle = `
       --dh-frame-ar: ${layout.frameRatio};
-      --dh-frame-width: ${layout.frameWidth};
       --dh-hum-panel-max: ${layout.humPanelMax}px;
       --dh-controls-max: ${layout.controlsMax}px;
       --dh-cur-max: ${layout.curMax}px;
