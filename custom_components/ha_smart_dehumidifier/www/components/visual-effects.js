@@ -40,25 +40,25 @@ export function renderVisualEffects(card, config = {}) {
   );
 
   const color = config.efx_color ?? '#00ffff';
-  const offsetY = toFiniteNumber(config.efx_offset_y, 0);
+  const offsetY = toFiniteNumber(config.efx_offset_y, 13);
 
   const showFan = config.efx_fan_show ?? true;
-  const fanSize = toPositiveNumber(config.efx_fan_size, 240);
-  const fanOpacity = clamp(config.efx_fan_opacity, 0, 100) / 100;
-  const fanDur = speedToDuration(config.efx_fan_speed);
+  const fanSize = toPositiveNumber(config.efx_fan_size, 400);
+  const fanOpacity = clamp(toFiniteNumber(config.efx_fan_opacity, 10), 0, 100) / 100;
+  const fanDur = speedToDuration(toFiniteNumber(config.efx_fan_speed, 70));
 
-  const showComet = config.efx_comet_show ?? true;
-  const cometSize = toPositiveNumber(config.efx_comet_size, 320);
-  const cometDur = speedToDuration(config.efx_comet_speed);
+  const showComet = config.efx_comet_show ?? false;
+  const cometSize = toPositiveNumber(config.efx_comet_size, 350);
+  const cometDur = speedToDuration(toFiniteNumber(config.efx_comet_speed, 83));
 
-  const showCore = config.efx_core_show ?? true;
-  const coreSize = toPositiveNumber(config.efx_core_size, 160);
-  const coreDur = speedToDuration(config.efx_core_speed);
+  const showCore = config.efx_core_show ?? false;
+  const coreSize = toPositiveNumber(config.efx_core_size, 200);
+  const coreDur = speedToDuration(toFiniteNumber(config.efx_core_speed, 74));
 
-  const showParts = config.efx_part_show ?? true;
-  const numParts = Math.round(clamp(config.efx_part_count, 5, 100));
-  const partSpread = toPositiveNumber(config.efx_part_spread, 250);
-  const partDurBase = speedToDuration(config.efx_part_speed);
+  const showParts = config.efx_part_show ?? false;
+  const numParts = Math.round(clamp(toFiniteNumber(config.efx_part_count, 55), 5, 100));
+  const partSpread = toPositiveNumber(config.efx_part_spread, 400);
+  const partDurBase = speedToDuration(toFiniteNumber(config.efx_part_speed, 86));
 
   if (!fanOn) {
     return html`

@@ -16,12 +16,12 @@ import {
 } from './dh-utils.js';
 
 const DEFAULT_BORDER_RADIUS = 28;
-const DEFAULT_HEIGHT_PERCENT = 100;
+const DEFAULT_HEIGHT_PERCENT = 105;
 const TICK_MS = 1000;
 const NOISE_DATA_URI = `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`;
 
 function normalizeAlign(value) {
-  return value === 'left' || value === 'right' ? value : 'center';
+  return value === 'center' || value === 'right' ? value : 'left';
 }
 
 
@@ -496,19 +496,19 @@ class MyDehumidifierCard extends LitElement {
     const config = this._config || {};
 
     const borderRadius = Math.max(0, toFiniteNumber(config.card_border_radius, DEFAULT_BORDER_RADIUS));
-    const glassMaxWidth = toPositiveNumber(config.glass_max_width, 1000);
-    const layoutBaseWidth = toPositiveNumber(config.layout_base_width, 600);
+    const glassMaxWidth = toPositiveNumber(config.glass_max_width, 1200);
+    const layoutBaseWidth = toPositiveNumber(config.layout_base_width, 510);
     const humPanelMax = toPositiveNumber(
       config.hum_panel_max_width,
       toPositiveNumber(config.hum_panel_width, 250)
     );
-    const controlsMax = toPositiveNumber(config.controls_max_width, 520);
+    const controlsMax = toPositiveNumber(config.controls_max_width, 500);
     const curMax = toPositiveNumber(config.cur_max_width, 400);
     const heightPercent = toPositiveNumber(config.card_height_percent, DEFAULT_HEIGHT_PERCENT);
     const frameRatioNum = 100 / heightPercent;
     const frameRatio = `100 / ${heightPercent}`;
 
-    const glassRatio = toPositiveNumber(config.glass_aspect_ratio, 1.8);
+    const glassRatio = toPositiveNumber(config.glass_aspect_ratio, 1.7);
     const align = normalizeAlign(config.alignment);
 
     let justifyContent = 'center';
@@ -528,9 +528,9 @@ class MyDehumidifierCard extends LitElement {
       alignClass: `align-${align}`,
       justifyContent,
       padTop: `${toFiniteNumber(config.content_padding_top, 0)}px`,
-      padBottom: `${toFiniteNumber(config.content_padding_bottom, 16)}px`,
-      padLeft: `${toFiniteNumber(config.content_padding_left, 14)}px`,
-      padRight: `${toFiniteNumber(config.content_padding_right, 14)}px`,
+      padBottom: `${toFiniteNumber(config.content_padding_bottom, 0)}px`,
+      padLeft: `${toFiniteNumber(config.content_padding_left, 10)}px`,
+      padRight: `${toFiniteNumber(config.content_padding_right, 10)}px`,
       offsetX: `${toFiniteNumber(config.device_offset_x, 0)}px`,
       offsetY: `${toFiniteNumber(config.device_offset_y, 0)}px`,
     };

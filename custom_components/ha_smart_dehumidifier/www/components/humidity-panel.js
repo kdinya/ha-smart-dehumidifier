@@ -203,7 +203,7 @@ export function renderHumidityPanel(card, config = {}) {
   const requestedPanelWidth = toPositiveNumber(config.hum_panel_width, 250);
   const panelWidth = Math.min(requestedPanelWidth, controlsMaxWidth);
   const panelHeight = toPositiveNumber(config.hum_panel_height, 70);
-  const panelRadius = toFiniteNumber(config.hum_panel_radius, 28);
+  const panelRadius = toFiniteNumber(config.hum_panel_radius, 35);
   const panelPaddingX = toFiniteNumber(config.hum_panel_padding_x, 5);
 
   const displayWidth = toPositiveNumber(config.hum_display_width, 90);
@@ -228,7 +228,7 @@ export function renderHumidityPanel(card, config = {}) {
   const showTgtLabel = config.show_tgt_label ?? false;
   const tgtLabelText = config.tgt_label_text || 'Ціль';
   const tgtLabelSize = toPositiveNumber(config.tgt_label_size, 9);
-  const panelBottom = toFiniteNumber(config.hum_panel_bottom, 50);
+  const panelBottom = toFiniteNumber(config.hum_panel_bottom, 40);
 
   const autoShow = config.auto_ui_show ?? true;
   const autoAccentColor = config.auto_ui_color || '#7fc8ff';
@@ -238,9 +238,9 @@ export function renderHumidityPanel(card, config = {}) {
   const autoLabelText = config.auto_ui_label_text || 'Авто';
 
   const autoPopupX = toFiniteNumber(config.auto_ui_popup_x, 0);
-  const autoPopupY = toFiniteNumber(config.auto_ui_popup_y, 92);
-  const autoPopupWidth = toFiniteNumber(config.auto_ui_popup_width, 164);
-  const autoPopupHeight = toFiniteNumber(config.auto_ui_popup_height, 40);
+  const autoPopupY = toFiniteNumber(config.auto_ui_popup_y, -85);
+  const autoPopupWidth = toFiniteNumber(config.auto_ui_popup_width, 150);
+  const autoPopupHeight = toFiniteNumber(config.auto_ui_popup_height, 25);
   const autoPopupRadius = toFiniteNumber(config.auto_ui_popup_radius, 20);
   const autoPopupIconSize = toFiniteNumber(config.auto_ui_icon_size, 18);
   const autoPopupLabelSize = toFiniteNumber(config.auto_ui_label_size, 13);
@@ -283,9 +283,10 @@ export function renderHumidityPanel(card, config = {}) {
     <style>
       .dh-hum-stack {
         position: absolute;
-        left: 50%;
+        left: 0;
+        right: 0;
         bottom: ${layoutUnit(panelBottom, layoutBaseWidth)};
-        transform: translateX(-50%);
+        margin-inline: auto;
         width: min(${layoutUnit(panelWidth, layoutBaseWidth)}, 100cqw);
         aspect-ratio: ${panelWidth} / ${panelHeight};
         container-type: inline-size;
@@ -314,9 +315,8 @@ export function renderHumidityPanel(card, config = {}) {
 
       .dh-auto-popup-anchor {
         position: absolute;
-        left: calc(50% + ${panelUnit(autoPopupX)});
+        left: calc(50% + ${panelUnit(autoPopupX)} - ${panelUnit(autoPopupWidth / 2)});
         bottom: calc(100% + ${panelUnit(autoPopupY)});
-        transform: translateX(-50%);
         z-index: 6;
         pointer-events: none;
         overflow: visible;
@@ -332,9 +332,8 @@ export function renderHumidityPanel(card, config = {}) {
 
       .dh-cyber-toggle {
         position: absolute;
-        left: calc(50% + ${panelUnit(autoArrowX)});
+        left: calc(50% + ${panelUnit(autoArrowX)} - ${panelUnit(autoArrowWidth / 2)});
         bottom: calc(100% + ${panelUnit(autoArrowY)});
-        transform: translateX(-50%);
         width: ${panelUnit(autoArrowWidth)};
         height: ${panelUnit(autoArrowHeight)};
         min-width: ${panelUnit(autoArrowWidth)};

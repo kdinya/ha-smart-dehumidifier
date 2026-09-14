@@ -172,7 +172,7 @@ export function renderBottomControls(card, config = {}) {
   const badgeFontWeight = toFiniteNumber(config.badge_font_weight, 900);
   const badgeBgColor = config.badge_bg_color ?? '#06080b';
 
-  const btnsBottom = toFiniteNumber(config.btns_bottom, -13);
+  const btnsBottom = toFiniteNumber(config.btns_bottom, -30);
   const badgeOffsetY = toFiniteNumber(config.badge_offset_y, 0);
 
   const btnLabelSize = toPositiveNumber(config.btn_label_size, 16);

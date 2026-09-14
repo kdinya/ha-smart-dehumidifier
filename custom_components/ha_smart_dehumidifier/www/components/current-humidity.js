@@ -75,9 +75,9 @@ export function renderCurrentHumidity(card, config = {}) {
 
   const curFontFamily = config.cur_font_family ?? "'7segment', monospace";
 
-  const curSize = toFiniteNumber(config.cur_size, 90);
-  const curDecSize = toFiniteNumber(config.cur_dec_size, 60);
-  const curUnitSize = toFiniteNumber(config.cur_unit_size, 50);
+  const curSize = toFiniteNumber(config.cur_size, 140);
+  const curDecSize = toFiniteNumber(config.cur_dec_size, 100);
+  const curUnitSize = toFiniteNumber(config.cur_unit_size, 70);
 
   const curColorOn = config.cur_color_on ?? 'white';
   const curColorOff = config.cur_color_off ?? 'rgba(255,255,255,0.38)';
@@ -98,7 +98,7 @@ export function renderCurrentHumidity(card, config = {}) {
   const curLetterSpacing = toFiniteNumber(config.cur_letter_spacing, -2);
   const curGap = toFiniteNumber(config.cur_gap, 3);
   const curUnitMarginLeft = toFiniteNumber(config.cur_unit_margin_left, 2);
-  const curOffsetY = toFiniteNumber(config.cur_offset_y, 6);
+  const curOffsetY = toFiniteNumber(config.cur_offset_y, 22);
 
   const curShowDecimal = config.cur_show_decimal ?? true;
   const curShowUnit = config.cur_show_unit ?? true;
