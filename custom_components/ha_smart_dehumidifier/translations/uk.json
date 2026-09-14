@@ -8,8 +8,20 @@
           "name": "Назва",
           "fan_entity": "Вимикач вентилятора",
           "current_humidity_entity": "Датчик вологості (кімната з осушувачем)",
-          "abs_humidity_entity": "Датчик вологості (сусідня кімната), %",
           "room_temp_entity": "Датчик температури (кімната з осушувачем)",
+          "abs_humidity_entity": "Датчик вологості (сусідня кімната), %",
+          "neighbor_temp_entity": "Датчик температури (сусідня кімната)"
+        }
+      },
+      "reconfigure": {
+        "title": "HA Smart Dehumidifier",
+        "description": "Зміна обраного вимикача/датчиків цього пристрою.",
+        "data": {
+          "name": "Назва",
+          "fan_entity": "Вимикач вентилятора",
+          "current_humidity_entity": "Датчик вологості (кімната з осушувачем)",
+          "room_temp_entity": "Датчик температури (кімната з осушувачем)",
+          "abs_humidity_entity": "Датчик вологості (сусідня кімната), %",
           "neighbor_temp_entity": "Датчик температури (сусідня кімната)"
         }
       }
@@ -32,23 +44,45 @@
   },
   "entity": {
     "sensor": {
-      "status": { "name": "Статус" },
-      "recommended_humidity": { "name": "Рекомендована вологість" },
-      "absolute_humidity_room": { "name": "Абсолютна вологість (кімната)" },
-      "absolute_humidity_neighbor": { "name": "Абсолютна вологість (сусідня кімната)" }
+      "status": {
+        "name": "Статус"
+      },
+      "recommended_humidity": {
+        "name": "Рекомендована вологість"
+      },
+      "absolute_humidity_room": {
+        "name": "Абсолютна вологість (кімната)"
+      },
+      "absolute_humidity_neighbor": {
+        "name": "Абсолютна вологість (сусідня кімната)"
+      }
     },
     "switch": {
-      "auto_mode": { "name": "Авто режим" }
+      "auto_mode": {
+        "name": "Авто режим"
+      }
     },
     "button": {
-      "manual_toggle": { "name": "Ручний режим" }
+      "manual_toggle": {
+        "name": "Ручний режим"
+      }
     },
     "number": {
-      "delta": { "name": "Дельта вологості" },
-      "min_humidity": { "name": "Мін. рекомендована вологість" },
-      "max_humidity": { "name": "Макс. рекомендована вологість" },
-      "manual_runtime": { "name": "Тривалість ручного режиму" },
-      "manual_pause": { "name": "Пауза після ручного режиму" }
+      "delta": {
+        "name": "Дельта вологості"
+      },
+      "min_humidity": {
+        "name": "Мін. рекомендована вологість"
+      },
+      "max_humidity": {
+        "name": "Макс. рекомендована вологість"
+      },
+      "manual_runtime": {
+        "name": "Тривалість ручного режиму"
+      },
+      "manual_pause": {
+        "name": "Пауза після ручного режиму"
+      }
     }
   }
 }

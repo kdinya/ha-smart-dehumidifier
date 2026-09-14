@@ -33,23 +33,36 @@ from .const import (
 CONF_NAME = "name"
 
 
-def _user_schema() -> vol.Schema:
+def _user_schema(defaults: dict[str, Any] | None = None) -> vol.Schema:
+    defaults = defaults or {}
     return vol.Schema(
         {
-            vol.Required(CONF_NAME, default="Осушувач"): str,
-            vol.Required(CONF_FAN_ENTITY): selector.EntitySelector(
-                selector.EntitySelectorConfig(domain="switch")
-            ),
-            vol.Optional(CONF_CURRENT_HUMIDITY_ENTITY): selector.EntitySelector(
-                selector.EntitySelectorConfig(domain="sensor")
-            ),
-            vol.Optional(CONF_ABS_HUMIDITY_ENTITY): selector.EntitySelector(
-                selector.EntitySelectorConfig(domain="sensor")
-            ),
-            vol.Optional(CONF_ROOM_TEMP_ENTITY): selector.EntitySelector(
+            vol.Required(CONF_NAME, default=defaults.get(CONF_NAME, "Осушувач")): str,
+            vol.Required(
+                CONF_FAN_ENTITY, default=defaults.get(CONF_FAN_ENTITY, vol.UNDEFINED)
+            ): selector.EntitySelector(selector.EntitySelectorConfig(domain="switch")),
+            # Порядок навмисно такий: спочатку обидва датчики кімнати з
+            # осушувачем (вологість, потім температура), потім обидва
+            # датчики сусідньої кімнати (вологість, потім температура) -
+            # щоб було видно, які два йдуть в парі.
+            vol.Optional(
+                CONF_CURRENT_HUMIDITY_ENTITY,
+                default=defaults.get(CONF_CURRENT_HUMIDITY_ENTITY, vol.UNDEFINED),
+            ): selector.EntitySelector(selector.EntitySelectorConfig(domain="sensor")),
+            vol.Optional(
+                CONF_ROOM_TEMP_ENTITY,
+                default=defaults.get(CONF_ROOM_TEMP_ENTITY, vol.UNDEFINED),
+            ): selector.EntitySelector(
                 selector.EntitySelectorConfig(domain="sensor", device_class="temperature")
             ),
-            vol.Optional(CONF_NEIGHBOR_TEMP_ENTITY): selector.EntitySelector(
+            vol.Optional(
+                CONF_ABS_HUMIDITY_ENTITY,
+                default=defaults.get(CONF_ABS_HUMIDITY_ENTITY, vol.UNDEFINED),
+            ): selector.EntitySelector(selector.EntitySelectorConfig(domain="sensor")),
+            vol.Optional(
+                CONF_NEIGHBOR_TEMP_ENTITY,
+                default=defaults.get(CONF_NEIGHBOR_TEMP_ENTITY, vol.UNDEFINED),
+            ): selector.EntitySelector(
                 selector.EntitySelectorConfig(domain="sensor", device_class="temperature")
             ),
         }
@@ -69,6 +82,28 @@ class HaSmartDehumidifierConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(title=name, data=user_input)
 
         return self.async_show_form(step_id="user", data_schema=_user_schema(), errors=errors)
+
+    async def async_step_reconfigure(self, user_input: dict[str, Any] | None = None):
+        """Дозволяє змінити обрані сутності (вимикач, датчики) вже
+        існуючого пристрою - наприклад, додати датчик сусідньої кімнати,
+        якого не було на момент першого налаштування."""
+        errors: dict[str, str] = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            name = user_input.pop(CONF_NAME)
+            return self.async_update_reload_and_abort(
+                reconfigure_entry,
+                title=name,
+                data=user_input,
+            )
+
+        defaults = {**reconfigure_entry.data, CONF_NAME: reconfigure_entry.title}
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=_user_schema(defaults),
+            errors=errors,
+        )
 
     @staticmethod
     @callback

@@ -8,8 +8,20 @@
           "name": "Name",
           "fan_entity": "Fan switch",
           "current_humidity_entity": "Humidity sensor (dehumidifier room)",
-          "abs_humidity_entity": "Humidity sensor (adjacent room), %",
           "room_temp_entity": "Temperature sensor (dehumidifier room)",
+          "abs_humidity_entity": "Humidity sensor (adjacent room), %",
+          "neighbor_temp_entity": "Temperature sensor (adjacent room)"
+        }
+      },
+      "reconfigure": {
+        "title": "HA Smart Dehumidifier",
+        "description": "Change the selected switch/sensors for this dehumidifier.",
+        "data": {
+          "name": "Name",
+          "fan_entity": "Fan switch",
+          "current_humidity_entity": "Humidity sensor (dehumidifier room)",
+          "room_temp_entity": "Temperature sensor (dehumidifier room)",
+          "abs_humidity_entity": "Humidity sensor (adjacent room), %",
           "neighbor_temp_entity": "Temperature sensor (adjacent room)"
         }
       }
