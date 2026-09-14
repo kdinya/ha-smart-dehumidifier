@@ -78,6 +78,7 @@ class MyDehumidifierCard extends LitElement {
       display: flex;
       justify-content: center;
       width: 100%;
+      height: 100%;
       position: relative;
       container-type: inline-size;
     }
@@ -91,29 +92,13 @@ class MyDehumidifierCard extends LitElement {
       padding: 0;
       margin: 0;
       width: 100%;
+      height: 100%;
       max-width: var(--dh-glass-max-width, 1000px);
       box-sizing: border-box;
       border-radius: var(--dh-card-radius, 28px);
       display: flex;
       align-items: center;
       justify-content: var(--dh-justify, center);
-      container-type: inline-size;
-    }
-
-    /*
-     * На вузьких екранах (мобільний) висота ha-card НЕ фіксується
-     * aspect-ratio — вона природно підлаштовується під вміст (.dh-frame),
-     * тож відступи зверху/знизу (спейсери нижче) РЕАЛЬНО додають висоту
-     * картці, а не стискають/зсувають пристрій усередині фіксованої
-     * коробки. На широких екранах (>=480px) картці й далі задається
-     * власне співвідношення сторін (--dh-glass-ar-wide) - це навмисний
-     * "леттербоксинг" для десктопу, його не чіпаємо.
-     */
-    @container (min-width: 480px) {
-      ha-card {
-        aspect-ratio: var(--dh-glass-ar-wide, 1.8);
-        container-type: size;
-      }
     }
 
     .dh-card-bg,
@@ -198,14 +183,15 @@ class MyDehumidifierCard extends LitElement {
     }
 
     .dh-frame {
-      /* Ширина обмежена configurable максимумом (layoutBaseWidth), але
-         ніколи не ширша за саму картку. На вузьких екранах ця ширина й
-         визначає висоту .dh-frame-aspect (через aspect-ratio нижче); на
-         широких - висота вже фіксована самою ha-card (@container вище),
-         і .dh-frame просто розтягується під неї. Ніяких JS-вимірювань
-         (ResizeObserver) не потрібно: min(95cqmin, ...) на .dh-device
-         сам враховує і ширину, і висоту реального контейнера. */
+      /* Висота: 100% від ha-card. Якщо ha-card має РЕАЛЬНУ (задану ззовні,
+         напр. Sections-версткою HA) висоту - рамка рівно її й заповнює.
+         Якщо ha-card сама auto-висоти (звичайна Masonry-верстка) - 100%
+         від auto коректно резолвиться в auto (стандартна поведінка CSS
+         для відсоткової висоти від невизначеного контейнера), і рамка
+         природно набуває висоти свого вмісту. Жодних @container-перемикачів
+         не потрібно - той самий рядок коректно працює для обох випадків. */
       width: min(100%, var(--dh-frame-max-width, 400px));
+      height: 100%;
       display: flex;
       flex-direction: column;
       position: relative;
@@ -213,13 +199,18 @@ class MyDehumidifierCard extends LitElement {
     }
 
     .dh-frame-aspect {
-      /* Ширина завжди точно дорівнює .dh-frame (100%) - визначена й
-         однозначна, тож aspect-ratio коректно й надійно виводить з неї
-         висоту (звичайний, давно перевірений спосіб - без auto-розмірів
-         з обох боків одразу). */
+      /* aspect-ratio дає "бажану" (максимальну, незатиснуту) форму й
+         розмір пристрою, коли висоти вдосталь (flex-контейнер сам
+         auto-висоти - нічого стискати, елемент бере свій природний
+         aspect-ratio-розмір). flex:1 1 auto + min-height:0 дозволяють
+         ЦЕ Ж саме правило коректно СТИСНУТИСЯ, коли .dh-frame має
+         РЕАЛЬНО обмежену висоту (сума спейсерів + бажана висота більша
+         за доступну) - flexbox сам забирає стільки місця, скільки є,
+         без жодного окремого @container-правила. */
       width: 100%;
       aspect-ratio: var(--dh-frame-ar, 1);
-      flex: 0 0 auto;
+      flex: 1 1 auto;
+      min-height: 0;
       container-type: size;
       position: relative;
     }
@@ -242,63 +233,32 @@ class MyDehumidifierCard extends LitElement {
       box-sizing: border-box;
       padding: 0 var(--dh-pad-right, 14px) 0 var(--dh-pad-left, 14px);
       overflow: visible;
-      /* Найближчий контейнер розмірного запиту для .dh-device: cqmin тут
-         рахується від ВЖЕ звуженого горизонтальними відступами простору
-         (a не від зовнішньої ha-card), тож ліве/праве поле лишається
-         однаковим і на вузьких екранах. */
+      display: flex;
+      align-items: center;
+      justify-content: var(--dh-device-justify, center);
+      /* Найближчий контейнер розмірного запиту для .dh-device: cqi/cqb тут
+         рахуються від ВЖЕ звуженого горизонтальними відступами і РЕАЛЬНО
+         доступного (можливо стиснутого по висоті вище) простору - не від
+         зовнішньої ha-card і не від "бажаної" aspect-ratio-висоти. */
       container-type: size;
     }
 
     .dh-device {
       position: relative;
-      width: min(95cqmin, var(--dh-frame-max-width, 400px));
-      height: min(95cqmin, var(--dh-frame-max-width, 400px));
-      margin: 0 auto;
+      /* Єдина, безбрейкпоінтна формула "вписати найбільший прямокутник
+         заданої форми (--dh-frame-ar) в доступну область": ширина, яку
+         дозволяє ширина контейнера (95cqi), ширина, еквівалентна тому,
+         що дозволяє ВИСОТА контейнера з урахуванням форми пристрою
+         (95cqb * --dh-frame-ar-num), і налаштований максимум. Яке з трьох
+         менше - те й перемагає, тож пристрій завжди повністю поміщається
+         і по ширині, і по висоті, ніколи не обрізається і ніколи не
+         зростає понад свій налаштований максимум. aspect-ratio виводить
+         висоту з цієї ширини - форма пристрою завжди відповідає
+         card_height_percent, а не примусово квадратна. */
+      width: min(95cqi, calc(95cqb * var(--dh-frame-ar-num, 1)), var(--dh-frame-max-width, 400px));
+      aspect-ratio: var(--dh-frame-ar, 1);
       transform: translate(var(--dh-offset-x, 0px), var(--dh-offset-y, 0px));
       container-type: inline-size;
-    }
-
-    /*
-     * ВАЖЛИВО: цей блок навмисно розташований ПІСЛЯ базових правил
-     * .dh-frame / .dh-frame-aspect / .dh-device вище. При однаковій
-     * специфічності селекторів CSS-каскад віддає перевагу правилу, яке
-     * йде ПІЗНІШЕ в коді - тож якщо цей @container-override поставити
-     * ДО базових правил (як було раніше), базові aspect-ratio/flex
-     * "перебивають" override навіть коли умова контейнера виконується,
-     * і пристрій знову обрізається. Розташування тут гарантує, що на
-     * широких екранах саме ці правила виграють.
-     *
-     * Суть фіксу: на широких екранах (>=480px) висота ha-card ФІКСОВАНА
-     * через aspect-ratio (див. вище), тож .dh-frame-aspect більше не
-     * повинен сам диктувати висоту через власний aspect-ratio
-     * (heightPercent) - якщо вона не збігається з реальною висотою
-     * картки, пристрій обрізається зверху/знизу. Натомість .dh-frame і
-     * .dh-frame-aspect розтягуються на всю РЕАЛЬНО доступну висоту
-     * картки, а сам .dh-device вписується в неї через min(95cqmin, ...) -
-     * це завжди враховує і ширину, і висоту фактичного контейнера, тож
-     * пристрій гарантовано не обрізається на жодній орієнтації/розмірі
-     * екрана (телефон/планшет, портрет/альбом).
-     */
-    @container (min-width: 480px) {
-      .dh-frame {
-        height: 100%;
-      }
-
-      .dh-frame-aspect {
-        aspect-ratio: unset;
-        flex: 1 1 auto;
-        min-height: 0;
-      }
-
-      /* Вирівнювання (ліворуч/по центру/праворуч) - навмисний "леттербоксинг"
-         лише для широких екранів (десктоп/планшет-альбом). На вузьких
-         екранах .dh-device й так займає майже всю доступну ширину - зсув
-         margin з'їдав невеликий запас цілком в один бік, і пристрій
-         "притискався" до вибраного краю замість однакових полів
-         зліва/справа, тож там ці правила НЕ застосовуються. */
-      .dh-frame.align-left .dh-device { margin-left: 0; margin-right: auto; }
-      .dh-frame.align-center .dh-device { margin-left: auto; margin-right: auto; }
-      .dh-frame.align-right .dh-device { margin-left: auto; margin-right: 0; }
     }
 
     .dh-limit-layer {
@@ -537,7 +497,6 @@ class MyDehumidifierCard extends LitElement {
     const frameRatioNum = 100 / heightPercent;
     const frameRatio = `100 / ${heightPercent}`;
 
-    const glassRatio = toPositiveNumber(config.glass_aspect_ratio, 1.7);
     const align = normalizeAlign(config.alignment);
 
     let justifyContent = 'center';
@@ -556,8 +515,6 @@ class MyDehumidifierCard extends LitElement {
       curMax,
       frameRatioNum,
       frameRatio,
-      glassRatio: String(glassRatio),
-      alignClass: `align-${align}`,
       justifyContent,
       padTop: `${padTopPx}px`,
       padBottom: `${padBottomPx}px`,
@@ -612,7 +569,6 @@ class MyDehumidifierCard extends LitElement {
     const cardStyle = `
       --dh-card-radius: ${layout.borderRadius}px;
       --dh-glass-max-width: ${layout.glassMaxWidth}px;
-      --dh-glass-ar-wide: ${layout.glassRatio};
       --dh-justify: ${layout.justifyContent};
       --dh-frame-max-width: ${layout.layoutBaseWidth}px;
       --dh-frame-ar-num: ${layout.frameRatioNum};
@@ -629,6 +585,7 @@ class MyDehumidifierCard extends LitElement {
       --dh-pad-right: ${layout.padRight};
       --dh-offset-x: ${layout.offsetX};
       --dh-offset-y: ${layout.offsetY};
+      --dh-device-justify: ${layout.justifyContent};
     `;
 
     return html`
@@ -647,7 +604,7 @@ class MyDehumidifierCard extends LitElement {
           <ha-icon icon="mdi:cog"></ha-icon>
         </button>
 
-        <div class="dh-frame ${layout.alignClass}" style="${frameStyle}">
+        <div class="dh-frame" style="${frameStyle}">
           <div class="dh-frame-top-spacer"></div>
           <div class="dh-frame-aspect">
             <div class="dh-scene">
