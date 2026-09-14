@@ -56,6 +56,14 @@ function isAutoEnabled(card, config) {
   return getEntityState(card, entityId)?.state === 'on';
 }
 
+// Панель "Автовологість" має сенс лише якщо в налаштуваннях пристрою
+// вказано датчик вологості сусідньої кімнати (abs_humidity_entity) - без
+// нього рекомендованої вологості просто нема що показувати, і пристрій
+// працює лише за вручну заданою ціллю та гістерезисом.
+function isAutoUiShown(config) {
+  return (config.auto_ui_show ?? true) && !!config.abs_humidity_entity;
+}
+
 function setAutoEnabled(card, config, enabled) {
   const entityId = config.auto_entity;
   callHA(card, 'switch', enabled ? 'turn_on' : 'turn_off', {
@@ -145,7 +153,7 @@ function toggleAutoPopup(card, config) {
 }
 
 function handleCenterClick(card, config) {
-  const autoShow = config.auto_ui_show ?? true;
+  const autoShow = isAutoUiShown(config);
   if (!autoShow) return;
 
   if (isAutoEnabled(card, config)) {
@@ -230,7 +238,7 @@ export function renderHumidityPanel(card, config = {}) {
   const tgtLabelSize = toPositiveNumber(config.tgt_label_size, 9);
   const panelBottom = toFiniteNumber(config.hum_panel_bottom, 40);
 
-  const autoShow = config.auto_ui_show ?? true;
+  const autoShow = isAutoUiShown(config);
   const autoAccentColor = config.auto_ui_color || '#7fc8ff';
   const autoPopupBg = config.auto_ui_popup_bg || 'linear-gradient(145deg, #2d3945 0%, #182029 100%)';
   const autoPopupBgActive = config.auto_ui_popup_bg_active || 'linear-gradient(145deg, #20394d 0%, #152433 100%)';

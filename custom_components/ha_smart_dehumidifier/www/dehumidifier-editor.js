@@ -147,6 +147,18 @@ class DehumidifierEditor extends LitElement {
       transform: rotate(180deg);
     }
 
+    .section-head.disabled {
+      cursor: default;
+      opacity: 0.55;
+    }
+
+    .section-note {
+      padding: 10px 12px 14px;
+      font-size: 12.5px;
+      line-height: 1.4;
+      color: var(--ed-text-dim);
+    }
+
     .section-body {
       padding: 4px 8px 8px;
       display: flex;
@@ -564,16 +576,27 @@ class DehumidifierEditor extends LitElement {
     return this._renderText(field);
   }
 
+  _hasNeighborHumiditySensor() {
+    const entityId = this._config?.entity;
+    if (!entityId) return true; // пристрій ще не обрано — секцію завчасно не блокуємо
+    const attrs = this.hass?.states?.[entityId]?.attributes;
+    return !!attrs?.abs_humidity_entity;
+  }
+
   render() {
+    const hasNeighborHumidity = this._hasNeighborHumiditySensor();
+
     return html`
       <div class="editor">
         ${EDITOR_SCHEMA.map((section) => {
           const isOpen = !!this._openSections[section.id];
+          const isAutoUiSection = section.id === 'auto_ui';
+          const isDisabled = isAutoUiSection && !hasNeighborHumidity;
 
           return html`
             <div class="section">
               <button
-                class="section-head"
+                class="section-head ${isDisabled ? 'disabled' : ''}"
                 type="button"
                 @click=${() => this._toggleSection(section.id)}
               >
@@ -583,9 +606,21 @@ class DehumidifierEditor extends LitElement {
               </button>
 
               ${isOpen ? html`
-                <div class="section-body">
-                  ${section.fields.map((field) => this._renderField(field))}
-                </div>
+                ${isDisabled
+                  ? html`
+                    <div class="section-note">
+                      Автоматична вологість недоступна: у налаштуваннях пристрою
+                      (Settings → Devices &amp; services → HA Smart Dehumidifier)
+                      не вказано датчик вологості сусідньої кімнати. Без нього
+                      осушувач працює лише за вручну заданою цільовою вологістю
+                      та гістерезисом.
+                    </div>
+                  `
+                  : html`
+                    <div class="section-body">
+                      ${section.fields.map((field) => this._renderField(field))}
+                    </div>
+                  `}
               ` : html``}
             </div>
           `;
