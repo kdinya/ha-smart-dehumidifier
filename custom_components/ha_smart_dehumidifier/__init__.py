@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import logging
 import os
+import time
 
 from homeassistant.components.frontend import add_extra_js_url
 from homeassistant.config_entries import ConfigEntry
@@ -13,20 +14,41 @@ from .device import DehumidifierDevice
 
 _LOGGER = logging.getLogger(__name__)
 
+# Обчислюється рівно один раз при імпорті модуля - тобто рівно один раз на
+# кожен повний рестарт Home Assistant (весь Python-процес і всі модулі
+# переімпортовуються заново при рестарті).
+_BOOT_TS = int(time.time())
+
 
 def _cache_busted_card_js_url(www_path: str) -> str:
-    """Append ?v=<mtime> so browsers fetch a fresh card.js after every update.
+    """Append ?v=<mtime>-<boot_ts> so browsers always fetch a fresh card.js.
 
-    ES module imports are cached by the browser per exact URL — without a
-    changing query string, an update to index.js on disk can keep being
-    served from a stale (possibly broken, mid-edit) cached copy, which looks
-    to the user exactly like "Custom element not found".
+    ES module imports кешуються браузером ПО ТОЧНОМУ URL. Раніше ?v=
+    рахувався ЛИШЕ з mtime файлу index.js на диску - а оскільки файл
+    зазвичай не змінюється між рестартами ХА, URL картки лишався
+    буквально ІДЕНТИЧНИМ при кожному рестарті.
+
+    Це відкривало вікно для перегонів (race condition) під час старту:
+    http-сервер ХА піднімається й починає відповідати на запити раніше,
+    ніж встигають завантажитись усі інтеграції (в т.ч. ця - реєстрація
+    статичного шляху нижче в async_setup). Якщо браузер встигав
+    запросити картку САМЕ в цю паузу, він отримував помилку (шлях ще
+    не зареєстрований) - і оскільки URL не змінювався від рестарту до
+    рестарту, браузер міг закешувати цю невдалу відповідь під тим самим
+    URL і продовжувати роздавати її з кешу навіть після успішного
+    довантаження ХА, аж до ручного очищення кешу.
+
+    Додавання _BOOT_TS (унікальний для кожного рестарту, а не лише для
+    кожної зміни файлу) гарантує, що URL картки ЗАВЖДИ новий після
+    рестарту ХА - навіть якщо один раз перегони й трапляться, наступний
+    рестарт піде вже за URL, якого браузер ще ніколи не бачив, і
+    самостійно довантажить картку без участі користувача.
     """
     try:
-        mtime = os.path.getmtime(os.path.join(www_path, "index.js"))
-        return f"{CARD_JS_URL}?v={int(mtime)}"
+        mtime = int(os.path.getmtime(os.path.join(www_path, "index.js")))
+        return f"{CARD_JS_URL}?v={mtime}-{_BOOT_TS}"
     except OSError:
-        return CARD_JS_URL
+        return f"{CARD_JS_URL}?v={_BOOT_TS}"
 
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
