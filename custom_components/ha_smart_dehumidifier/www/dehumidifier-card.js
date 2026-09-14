@@ -93,10 +93,10 @@ class MyDehumidifierCard extends LitElement {
       border: none;
       box-shadow: none;
       padding: 0;
-      margin: 0;
+      margin: 0 auto;
       width: 100%;
       height: 100%;
-      max-width: var(--dh-glass-max-width, 1000px);
+      max-width: min(var(--dh-glass-max-width, 1000px), var(--dh-frame-width, 100%));
       box-sizing: border-box;
       border-radius: var(--dh-card-radius, 28px);
       display: flex;
@@ -217,16 +217,12 @@ class MyDehumidifierCard extends LitElement {
          .dh-scene/.dh-device (нижче) можуть надійно виміряти її через
          cqb, як і раніше. */
       width: 100%;
-      aspect-ratio: var(--dh-frame-ar, 1);
+      /* Завжди glass-ar (наприклад 1.7) - без різкого стрибка пропорцій
+         на мобільних, ширина рамки вже коректно розрахована в JS. */
+      aspect-ratio: var(--dh-glass-ar, 1.7);
       flex: 0 0 auto;
       container-type: size;
       position: relative;
-    }
-
-    @container (min-width: 480px) {
-      .dh-frame-aspect {
-        aspect-ratio: var(--dh-glass-ar, 1.7);
-      }
     }
 
     .dh-frame-top-spacer {
@@ -595,20 +591,27 @@ class MyDehumidifierCard extends LitElement {
     const btnsBottomPx = toFiniteNumber(config.btns_bottom, -30);
     const bottomOverhangRatio = Math.max(0, -btnsBottomPx) / SCENE_REFERENCE_WIDTH;
 
-    // Ширина рамки: рахуємо в JS з РЕАЛЬНО виміряного (ResizeObserver,
+    // Ширина рамки ("скла"): рахуємо в JS з РЕАЛЬНО виміряного (ResizeObserver,
     // див. конструктор) розміру ha-card - надійно вписує "скляну" рамку і
     // в ширину, і у висоту одночасно, без container-type:size на .dh-frame
     // (що на auto-висоті призводило до нульового розміру - картка зникала).
-    // isWide відповідає тому самому порогу 480px, що й @container-запит,
-    // який перемикає аспект рамки з --dh-frame-ar на --dh-glass-ar.
+    //
+    // Пропорція (glass_aspect_ratio, напр. 1.7) орієнтується саме на
+    // "Макс. ширину СКЛА" (glassMaxWidth) - це межа самої картки/рамки.
+    // "Макс. ширина ПРИЛАДУ" (layoutBaseWidth) - окрема, менша межа для
+    // самого осушувача всередині рамки; вона вже враховується окремо в CSS
+    // через --dh-frame-max-width у формулі .dh-device (95cqi/95cqb-кап),
+    // тож тут її НЕ застосовуємо - інакше рамка ("скло") ніколи не могла б
+    // бути ширшою за прилад, і другий/третій етап масштабування (коли
+    // прилад вже впирається в свою межу висоти, а скло продовжує
+    // звужуватися) був би неможливий.
     let frameWidthPx = null;
     if (this._cardBox && this._cardBox.w > 0) {
       const { w: cardW, h: cardH } = this._cardBox;
-      const isWide = cardW >= 480;
-      const ratioNum = isWide ? glassAspectRatio : frameRatioNum;
+      const ratioNum = glassAspectRatio;
       const usableH = cardH - padTopPx - padBottomPx;
       const heightBasedW = usableH > 0 ? usableH * ratioNum : cardW;
-      frameWidthPx = Math.min(cardW, heightBasedW, layoutBaseWidth);
+      frameWidthPx = Math.min(cardW, heightBasedW, glassMaxWidth);
     }
 
     return {
@@ -623,7 +626,7 @@ class MyDehumidifierCard extends LitElement {
       frameRatio,
       // До першого вимірювання ResizeObserver-ом (перший рендер) - безпечний
       // CSS-фолбек, щоб нічого не "блимало" порожнім.
-      frameWidth: frameWidthPx !== null ? `${frameWidthPx}px` : `min(100%, ${layoutBaseWidth}px)`,
+      frameWidth: frameWidthPx !== null ? `${frameWidthPx}px` : `min(100%, ${glassMaxWidth}px)`,
       justifyContent,
       padTop: `${padTopPx}px`,
       padBottom: `${padBottomPx}px`,
@@ -693,6 +696,7 @@ class MyDehumidifierCard extends LitElement {
       --dh-frame-ar-num: ${layout.frameRatioNum};
       --dh-pad-top: ${layout.padTop};
       --dh-pad-bottom: ${layout.padBottom};
+      --dh-frame-width: ${layout.frameWidth};
     `;
 
     const frameStyle = `
