@@ -118,6 +118,10 @@ class MyDehumidifierCard extends LitElement {
       .dh-frame {
         width: min(100cqi, calc(100cqb * var(--dh-frame-ar-num, 1)), var(--dh-frame-max-width, 400px));
       }
+
+      .dh-frame.align-left .dh-device { margin-left: 0; margin-right: auto; }
+      .dh-frame.align-center .dh-device { margin-left: auto; margin-right: auto; }
+      .dh-frame.align-right .dh-device { margin-left: auto; margin-right: 0; }
     }
 
     .dh-card-bg,
@@ -252,9 +256,11 @@ class MyDehumidifierCard extends LitElement {
       container-type: inline-size;
     }
 
-    .dh-frame.align-left .dh-device { margin-left: 0; margin-right: auto; }
-    .dh-frame.align-center .dh-device { margin-left: auto; margin-right: auto; }
-    .dh-frame.align-right .dh-device { margin-left: auto; margin-right: 0; }
+    /* Вирівнювання (ліворуч/по центру/праворуч) застосовується лише на
+       широких екранах (леттербоксинг для десктопу). На вузьких екранах
+       .dh-device й так займає майже всю доступну ширину - зсув margin
+       з'їдав невеликий запас цілком в один бік, і пристрій "притискався"
+       до вибраного краю замість однакових полів зліва/справа. */
 
     .dh-limit-layer {
       position: absolute;
