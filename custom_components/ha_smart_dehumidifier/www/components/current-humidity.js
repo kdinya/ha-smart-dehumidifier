@@ -68,7 +68,7 @@ export function renderCurrentHumidity(card, config = {}) {
   if (!(config.show_current ?? true)) return html``;
 
   const layoutBaseWidth = toPositiveNumber(
-    config.layout_base_width,
+    config.device_design_width,
     DEFAULT_LAYOUT_BASE_WIDTH
   );
 

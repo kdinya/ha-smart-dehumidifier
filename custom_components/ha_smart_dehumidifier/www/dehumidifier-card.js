@@ -18,7 +18,7 @@ import {
 const DEFAULT_BORDER_RADIUS = 28;
 const DEFAULT_HEIGHT_PERCENT = 105;
 const TICK_MS = 1000;
-// Той самий "внутрішній" масштаб, що й у _renderSceneContent() (layout_base_width: 400
+// Той самий "внутрішній" масштаб, що й у _renderSceneContent() (device_design_width
 // для дуги/панелей/кнопок) - потрібен тут для компенсації зсуву нижньої панелі (див. _getLayoutData).
 const SCENE_REFERENCE_WIDTH = 400;
 const NOISE_DATA_URI = `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`;
@@ -203,15 +203,25 @@ class MyDehumidifierCard extends LitElement {
 
     .dh-frame-aspect {
       /* aspect-ratio дає "бажану" (максимальну, незатиснуту) форму й
-         розмір пристрою, коли висоти вдосталь (flex-контейнер сам
+         розмір ПРИЛАДУ, коли висоти вдосталь (flex-контейнер сам
          auto-висоти - нічого стискати, елемент бере свій природний
          aspect-ratio-розмір). flex:1 1 auto + min-height:0 дозволяють
          ЦЕ Ж саме правило коректно СТИСНУТИСЯ, коли .dh-frame має
          РЕАЛЬНО обмежену висоту (сума спейсерів + бажана висота більша
          за доступну) - flexbox сам забирає стільки місця, скільки є,
-         без жодного окремого @container-правила. */
+         без жодного окремого @container-правила.
+
+         --dh-glass-ar (glass_aspect_ratio) - ОКРЕМА від форми самого
+         приладу (--dh-frame-ar, .dh-device нижче) пропорція. Поки
+         прилад (сцена всередині) менший за цю "скляну" рамку - рамка
+         показує саме цю пропорцію, з запасом простору навколо приладу.
+         Коли рамці бракує висоти (flex-shrink вище) - той самий
+         безбрейкпоінтний min()-розрахунок у .dh-device (нижче) вже сам
+         звужує прилад під фактично доступний, стиснутий розмір рамки -
+         подальшого окремого стиснення рамки відносно приладу не
+         відбувається, обидва масштабуються від того самого контейнера. */
       width: 100%;
-      aspect-ratio: var(--dh-frame-ar, 1);
+      aspect-ratio: var(--dh-glass-ar, 1.7);
       flex: 1 1 auto;
       min-height: 0;
       container-type: size;
@@ -495,6 +505,7 @@ class MyDehumidifierCard extends LitElement {
 
     const borderRadius = Math.max(0, toFiniteNumber(config.card_border_radius, DEFAULT_BORDER_RADIUS));
     const glassMaxWidth = toPositiveNumber(config.glass_max_width, 1200);
+    const glassAspectRatio = toPositiveNumber(config.glass_aspect_ratio, 1.7);
     const layoutBaseWidth = toPositiveNumber(config.layout_base_width, 510);
     const humPanelMax = toPositiveNumber(
       config.hum_panel_max_width,
@@ -530,6 +541,7 @@ class MyDehumidifierCard extends LitElement {
     return {
       borderRadius,
       glassMaxWidth,
+      glassAspectRatio,
       layoutBaseWidth,
       humPanelMax,
       controlsMax,
@@ -549,7 +561,16 @@ class MyDehumidifierCard extends LitElement {
 
   _renderSceneContent() {
     const config = this._config;
-    const renderConfig = { ...config, layout_base_width: 400 };
+    // device_design_width - НЕ те саме, що config.layout_base_width
+    // ("Макс. ширина ПРИЛАДУ", піксельний cap для --dh-frame-max-width,
+    // рахується в _getLayoutData). Це окрема, суто внутрішня геометрична
+    // база координат ("прилад намальований як 400px завширшки"), у якій
+    // задані всі px-подібні параметри дуги/панелей/кнопок/ефектів
+    // (arc_radius, cur_size, btn_height і т.д.) - layoutUnit() переводить
+    // їх у cqw ВІДНОСНО САМЕ ЦІЄЇ бази, а не відносно налаштованого
+    // користувачем максимуму ширини приладу. Той самий SCENE_REFERENCE_WIDTH,
+    // що й у _getLayoutData() (компенсація нижньої панелі) - єдине джерело.
+    const renderConfig = { ...config, device_design_width: SCENE_REFERENCE_WIDTH };
 
     return html`
       ${renderVisualEffects(this, renderConfig)}
@@ -600,6 +621,7 @@ class MyDehumidifierCard extends LitElement {
 
     const frameStyle = `
       --dh-frame-ar: ${layout.frameRatio};
+      --dh-glass-ar: ${layout.glassAspectRatio};
       --dh-hum-panel-max: ${layout.humPanelMax}px;
       --dh-controls-max: ${layout.controlsMax}px;
       --dh-cur-max: ${layout.curMax}px;

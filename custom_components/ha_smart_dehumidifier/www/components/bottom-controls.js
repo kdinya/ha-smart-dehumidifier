@@ -164,7 +164,7 @@ export function renderBottomControls(card, config = {}) {
   if (config.show_btns === false) return html``;
 
   const layoutBaseWidth = toPositiveNumber(
-    config.layout_base_width,
+    config.device_design_width,
     DEFAULT_LAYOUT_BASE_WIDTH
   );
   const controlsMaxWidth = toPositiveNumber(

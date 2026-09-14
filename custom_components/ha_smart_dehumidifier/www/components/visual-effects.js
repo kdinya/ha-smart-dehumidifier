@@ -35,7 +35,7 @@ export function renderVisualEffects(card, config = {}) {
   const fanOn = isEntityOn(card, fanEntity);
 
   const layoutBaseWidth = toPositiveNumber(
-    config.layout_base_width,
+    config.device_design_width,
     DEFAULT_LAYOUT_BASE_WIDTH
   );
 
