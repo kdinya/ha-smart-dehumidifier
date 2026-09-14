@@ -112,7 +112,7 @@ export function renderVisualEffects(card, config = {}) {
         position: absolute;
         top: 50%;
         left: 50%;
-        display: ${showFan ? 'block' : 'block'};
+        display: ${showFan ? 'block' : 'none'};
         color: ${color};
         opacity: ${fanOpacity};
         --mdc-icon-size: ${fanSizeCss};
