@@ -6,7 +6,7 @@ import {
   clamp,
   layoutUnit,
   isEntityOn,
-  DEFAULT_LAYOUT_BASE_WIDTH,
+  getLayoutBaseWidth,
 } from '../dh-utils.js';
 
 
@@ -34,10 +34,7 @@ export function renderVisualEffects(card, config = {}) {
   const fanEntity = config.fan_entity;
   const fanOn = isEntityOn(card, fanEntity);
 
-  const layoutBaseWidth = toPositiveNumber(
-    config.device_design_width,
-    DEFAULT_LAYOUT_BASE_WIDTH
-  );
+  const layoutBaseWidth = getLayoutBaseWidth(config);
 
   const color = config.efx_color ?? '#00ffff';
   const offsetY = toFiniteNumber(config.efx_offset_y, 13);

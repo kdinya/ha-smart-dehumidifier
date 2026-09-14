@@ -476,7 +476,8 @@ class MyDehumidifierCard extends LitElement {
 
   _shouldRunTicker() {
     return this.isConnected && this._isFanRunning();
-  }// --- ВОТ ЭТА ФУНКЦИЯ БЫЛА ПРОПУЩЕНА ---
+  }
+
   _syncTicker() {
     if (this._shouldRunTicker()) this._startTicker();
     else this._stopTicker();

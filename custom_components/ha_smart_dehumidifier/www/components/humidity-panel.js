@@ -9,7 +9,7 @@ import {
   readNumberState,
   callHA,
   isMainEntityOn,
-  DEFAULT_LAYOUT_BASE_WIDTH,
+  getLayoutBaseWidth,
   DEFAULT_CONTROLS_MAX_WIDTH,
 } from '../dh-utils.js';
 
@@ -197,7 +197,7 @@ function handleAutoButtonClick(card, config, autoEnabled) {
 export function renderHumidityPanel(card, config = {}) {
   if (config.show_hum_panel === false) return html``;
 
-  const layoutBaseWidth = toPositiveNumber(config.device_design_width, DEFAULT_LAYOUT_BASE_WIDTH);
+  const layoutBaseWidth = getLayoutBaseWidth(config);
   const controlsMaxWidth = toPositiveNumber(config.controls_max_width, DEFAULT_CONTROLS_MAX_WIDTH);
 
   const requestedPanelWidth = toPositiveNumber(config.hum_panel_width, 250);

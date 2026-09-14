@@ -2,11 +2,10 @@ import { html } from '../files/lit-proxy.js';
 
 import {
   toFiniteNumber,
-  toPositiveNumber,
   layoutUnit,
   isMainEntityOn,
   readCurrentHumidity,
-  DEFAULT_LAYOUT_BASE_WIDTH,
+  getLayoutBaseWidth,
 } from '../dh-utils.js';
 
 // Глобальне завантаження локального шрифту (обхід ізоляції Shadow DOM)
@@ -67,10 +66,7 @@ function openMoreInfo(card, entityId) {
 export function renderCurrentHumidity(card, config = {}) {
   if (!(config.show_current ?? true)) return html``;
 
-  const layoutBaseWidth = toPositiveNumber(
-    config.device_design_width,
-    DEFAULT_LAYOUT_BASE_WIDTH
-  );
+  const layoutBaseWidth = getLayoutBaseWidth(config);
 
   const isOn = isMainEntityOn(card, config.entity);
   const currentHumidity = readCurrentHumidity(card, config);

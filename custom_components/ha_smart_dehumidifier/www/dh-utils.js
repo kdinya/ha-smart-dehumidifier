@@ -20,6 +20,14 @@ export function layoutUnit(value, layoutBaseWidth = DEFAULT_LAYOUT_BASE_WIDTH) {
   return `${(toFiniteNumber(value, 0) / base) * 100}cqw`;
 }
 
+// Внутрішня геометрична база координат сцени (device_design_width, див.
+// _renderSceneContent у dehumidifier-card.js) - той самий розрахунок
+// раніше був продубльований окремо в кожному з 4 компонентів
+// (bottom-controls, current-humidity, humidity-panel, visual-effects).
+export function getLayoutBaseWidth(config = {}) {
+  return toPositiveNumber(config.device_design_width, DEFAULT_LAYOUT_BASE_WIDTH);
+}
+
 export function getEntityState(card, entityId) {
   return entityId ? card?._hass?.states?.[entityId] : undefined;
 }
@@ -104,26 +112,6 @@ export function deriveConfig(config = {}, hass = null) {
   }
 
   return { ...guessed, ...fromDevice, ...config };
-}
-
-// Для візуального редактора картки: ЛИШЕ підтверджені сутності — ті, що
-// реально опубліковані пристроєм як атрибути стану головної сутності
-// (`entity`), і які справді існують у hass.states. На відміну від
-// deriveConfig(), тут навмисно НЕ використовується "вгаданий" за object_id
-// варіант (guessed) — якщо сутність ще не підтверджена пристроєм, поле в
-// редакторі має лишатися порожнім, а не показувати неіснуючий entity_id.
-export function deriveVerifiedEntities(config = {}, hass = null) {
-  const stateAttrs = hass?.states?.[config.entity]?.attributes || {};
-  const verified = {};
-
-  for (const key of AUTO_DERIVED_ENTITY_KEYS) {
-    const value = stateAttrs[key];
-    if (value && hass?.states?.[value]) {
-      verified[key] = value;
-    }
-  }
-
-  return verified;
 }
 
 export function hasEqualDerivedEntities(a, b) {

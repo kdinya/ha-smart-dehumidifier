@@ -1,5 +1,6 @@
 import { html, css, LitElement } from './files/lit-proxy.js';
 import { EDITOR_SCHEMA } from './visual-editor-config.js';
+import { clamp } from './dh-utils.js';
 
 const STORAGE_KEY = 'dh-editor-open-sections-v2';
 
@@ -11,12 +12,6 @@ function fireEvent(node, type, detail = {}, options = {}) {
   });
   node.dispatchEvent(event);
   return event;
-}
-
-function clamp(value, min, max) {
-  const num = Number(value);
-  if (Number.isNaN(num)) return min;
-  return Math.min(Math.max(num, min), max);
 }
 
 function roundToStep(value, step = 1) {

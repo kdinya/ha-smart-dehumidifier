@@ -1,4 +1,5 @@
 import { html } from '../files/lit-proxy.js';
+import { clamp } from '../dh-utils.js';
 
 export function renderSettingsPanel(card, config) {
   if (!card._isSettingsOpen) return html``;
@@ -53,8 +54,6 @@ export function renderSettingsPanel(card, config) {
     card._isSettingsOpen = false;
     card.requestUpdate();
   };
-
-  const clamp = (val, min, max) => Math.min(max, Math.max(min, val));
 
   const snapToStep = (val, min, step) => {
     if (!step || step <= 0) return val;
