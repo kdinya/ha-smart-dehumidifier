@@ -340,8 +340,18 @@ class DehumidifierDevice:
         self.recompute()
 
     def async_manual_toggle(self) -> None:
-        """script.vanna_manual_toggle."""
-        if self._manual_active:
+        """Кнопка "Ручний".
+
+        Завжди інвертує фактичний стан вентилятора, незалежно від того,
+        яким режимом він зараз керується (авто, вже ручний, чи обидва
+        одночасно):
+
+        - вентилятор зараз працює (fan_should_run) -> ставимо на паузу
+          (fan_should_run одразу стає False, бо pause_active має пріоритет
+          над і manual_active, і auto_request)
+        - вентилятор зараз НЕ працює (idle/off) -> вмикаємо ручним таймером
+        """
+        if self.fan_should_run:
             self._cancel_manual_timer()
             self._start_pause_timer()
         else:
