@@ -191,12 +191,16 @@ export function renderCurrentHumidity(card, config = {}) {
         50% { opacity: 1; }
       }
 
-      .dh-cur-connecting-dash {
+      .dh-cur-connecting-dot {
         display: inline-block;
         animation: dh-cur-connecting-pulse 1.2s ease-in-out infinite;
       }
 
-      .dh-cur-connecting-dash:nth-child(2) {
+      .dh-cur-connecting-dot:nth-child(2) {
+        animation-delay: 0.2s;
+      }
+
+      .dh-cur-connecting-dot:nth-child(3) {
         animation-delay: 0.4s;
       }
     </style>
@@ -215,7 +219,7 @@ export function renderCurrentHumidity(card, config = {}) {
         >
           <span class="dh-cur-int">${
             isConnecting
-              ? html`<span class="dh-cur-connecting-dash">-</span><span class="dh-cur-connecting-dash">-</span>`
+              ? html`<span class="dh-cur-connecting-dot">.</span><span class="dh-cur-connecting-dot">.</span><span class="dh-cur-connecting-dot">.</span>`
               : value.intText
           }</span>
 
