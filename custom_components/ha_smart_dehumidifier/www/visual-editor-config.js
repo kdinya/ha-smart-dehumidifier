@@ -20,7 +20,6 @@ export const EDITOR_SCHEMA = [
   section('layout', '📐', 'Розкладка', [
     num('card_border_radius', 'Заокруглення картки', 0, 80, 28, 1),
     num('card_height_percent', 'Висота картки на телефоні (%)', 30, 200, 105, 1),
-    num('glass_max_width', 'Макс. ширина СКЛА (для ПК)', 200, 2000, 1200, 10),
     num('glass_aspect_ratio', 'Пропорція скла на ПК (Шир/Вис)', 1.0, 3.0, 1.7, 0.1),
     num('layout_base_width', 'Макс. ширина ПРИЛАДУ', 200, 1000, 510, 10),
     sel('alignment', 'Вирівнювання осушувача', 'left', ALIGNMENT_OPTIONS),

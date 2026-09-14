@@ -93,10 +93,37 @@ class MyDehumidifierCard extends LitElement {
       border: none;
       box-shadow: none;
       padding: 0;
-      margin: 0 auto;
+      margin: 0;
       width: 100%;
-      height: 100%;
-      max-width: min(var(--dh-glass-max-width, 1000px), var(--dh-frame-width, 100%));
+      /* Ширину картки повністю визначає розкладка HA (Masonry-колонка чи
+         ширина комірки в Sections) - жодного власного максимуму тут
+         більше немає ("Макс. ширина СКЛА" прибрано з редактора).
+         aspect-ratio задає "бажану" висоту = ширина / glass_aspect_ratio
+         (поки її вистачає) - САМЕ ЦЕ і є "Пропорція скла на ПК". Це
+         ОДНОСПРЯМОВАНЕ обчислення (висота завжди виводиться з уже
+         визначеної ширини) - на відміну від попередньої версії з
+         ResizeObserver, тут немає циклу "вимірюємо власний розмір →
+         підставляємо його ж назад у свій max-width", який раніше й
+         гасив ефект (картка "переставала розтягуватись").
+         min-height - непорушна нижня межа: природна висота приладу за
+         його ВЛАСНИМ максимальним розміром (layout_base_width). Коли
+         аспектна висота падає нижче цієї межі (вузький екран), min-height
+         перемагає - картка більше не "тягне" власну форму і просто
+         повторює висоту приладу; звідти й ширина далі рухається разом
+         із шириною самого приладу (див. .dh-frame/.dh-device нижче).
+         container-type тут НЕ застосовується (на відміну від .dh-frame-aspect
+         нижче) - саме це раніше спричиняло повне зникнення картки:
+         contain:size ігнорує вміст при визначенні власного розміру, а
+         тут його все одно не потрібно - min-height рахується через
+         100cqi відносно :host (він і так вже container-type:inline-size),
+         а не відносно самої ha-card. Ніяких @container-брейкпоінтів -
+         обидва правила діють завжди, перехід між станами суцільний
+         (min()/calc() - неперервні функції ширини). */
+      aspect-ratio: var(--dh-glass-ar-wide, 1.7);
+      min-height: calc(
+        min(100cqi, var(--dh-frame-max-width, 400px)) * var(--dh-frame-ar-num, 1)
+        + var(--dh-pad-top, 0px) + var(--dh-pad-bottom, 16px)
+      );
       box-sizing: border-box;
       border-radius: var(--dh-card-radius, 28px);
       display: flex;
@@ -186,41 +213,41 @@ class MyDehumidifierCard extends LitElement {
     }
 
     .dh-frame {
-      /* Ширина - явне значення в пікселях з JS (_getLayoutData), пораховане
-         з РЕАЛЬНО виміряного (ResizeObserver) розміру ha-card - вписує
-         "скляну" рамку в обидва виміри одночасно (ширину й висоту), без
-         container-type:size на цьому елементі (див. коментар у
-         конструкторі - для auto-висоти на Masonry це давало нульовий
-         розмір і повне зникнення картки). До першого виміру - безпечний
-         CSS-фолбек (min(100%, maxW)), щоб нічого не "блимало" порожнім.
-         Висота лишається auto: на Masonry - природно під вміст; на
-         Sections (де ha-card має РЕАЛЬНУ задану ззовні висоту) - JS уже
-         врахував це значення при розрахунку ширини вище, тож висота
-         рамки (спейсери + aspect-box) сама вийде точно такою, як
-         виміряно, без потреби щось додатково обмежувати тут. */
-      width: var(--dh-frame-width, min(100%, var(--dh-frame-max-width, 400px)));
+      /* Ширина - чистий CSS min(), без JS-вимірювання: скільки дозволяє
+         сама ha-card (100%), але не більше layout_base_width (природний
+         максимум приладу). Висота: 100% від ha-card. ha-card тепер сама
+         рахує свою висоту через aspect-ratio + min-height (glass_aspect_ratio,
+         див. вище) - .dh-frame просто успадковує який би розмір вона не
+         мала: і коли ha-card ВИЩА за природну висоту приладу (glassRatio-фаза),
+         і коли вона РІВНО дорівнює їй (min-height переміг, фаза "разом").
+         Той самий рядок коректно працює для обох випадків, без @container. */
+      width: min(100%, var(--dh-frame-max-width, 400px));
+      height: 100%;
       display: flex;
       flex-direction: column;
+      justify-content: center;
       position: relative;
       z-index: 1;
     }
 
     .dh-frame-aspect {
-      /* Ширина завжди точно дорівнює .dh-frame (100%) - вона вже коректно
-         пораховано в JS з урахуванням і ширини, і висоти. aspect-ratio
-         надійно й однозначно виводить з неї висоту (просто, без
-         container-type:size і без flex-shrink, які раніше або ламали
-         пропорцію, або взагалі обнуляли розмір). container-type:size тут
-         залишається - на відміну від .dh-frame, ця коробка ЗАВЖДИ має
-         визначені (не auto) і ширину, і похідну від aspect-ratio висоту,
-         тож проблема "contain:size на auto-розмірі" тут не виникає - і
-         .dh-scene/.dh-device (нижче) можуть надійно виміряти її через
-         cqb, як і раніше. */
+      /* Ширина завжди точно дорівнює .dh-frame (100%). aspect-ratio
+         однозначно виводить з неї висоту приладу. flex-grow:0 -
+         принципово: коли ha-card, завдяки glass_aspect_ratio, стає
+         ВИЩОЮ за природну висоту приладу, зайвий простір у .dh-frame НЕ
+         повинен розтягувати прилад (це зламало б його форму) - він
+         просто лишається порожнім і центрується навколо приладу через
+         justify-content:center вище. flex-shrink:1 + min-height:0
+         дозволяють ЦЬОМУ Ж правилу коректно СТИСНУТИСЯ, коли доступної
+         висоти замало. container-type:size тут безпечний (на відміну
+         від ha-card вище) - ширина й похідна від aspect-ratio висота тут
+         ЗАВЖДИ визначені (ніколи не auto), тож contain:size нічого не
+         колапсує - і .dh-scene/.dh-device нижче можуть надійно виміряти
+         цю коробку через cqb, як і раніше. */
       width: 100%;
-      /* Завжди glass-ar (наприклад 1.7) - без різкого стрибка пропорцій
-         на мобільних, ширина рамки вже коректно розрахована в JS. */
-      aspect-ratio: var(--dh-glass-ar, 1.7);
-      flex: 0 0 auto;
+      aspect-ratio: var(--dh-frame-ar, 1);
+      flex: 0 1 auto;
+      min-height: 0;
       container-type: size;
       position: relative;
     }
@@ -363,24 +390,6 @@ class MyDehumidifierCard extends LitElement {
     this._isSettingsOpen = false;
     this._humPanelAutoPopupOpen = false;
     this._openSections = { auto: true, manual: false };
-
-    // РЕАЛЬНО виміряний (ResizeObserver) розмір ha-card - box:{w,h}|null.
-    // null означає "ще не виміряно" (перший рендер) - тоді використовується
-    // безпечний CSS-фолбек, поки перший вимір не прийде.
-    //
-    // Навіщо це замість чистого CSS: .dh-frame має бути auto-висоти на
-    // звичайній Masonry-верстці (розмір визначається вмістом) АБО заповнювати
-    // РЕАЛЬНО задану ззовні висоту на Sections-верстці - а вкладеним
-    // елементам одночасно потрібно надійно ЗМІРЯТИ цю (можливо auto)
-    // висоту, щоб вписати "скляну" рамку в обидва виміри разом. Пряме
-    // CSS-рішення для цього суперечливе: container-type:size (потрібен
-    // для вимірювання) вимагає contain:size, який ігнорує вміст при
-    // визначенні власного розміру - якщо висота auto, елемент просто
-    // схлопується в нуль (це й спричинило повне зникнення картки).
-    // ResizeObserver безпечно обходить цю суперечність.
-    this._cardBox = null;
-    this._cardResizeObserver = null;
-    this._observedCardEl = null;
   }
 
   connectedCallback() {
@@ -390,45 +399,7 @@ class MyDehumidifierCard extends LitElement {
 
   disconnectedCallback() {
     this._stopTicker();
-    this._teardownCardResizeObserver();
     super.disconnectedCallback();
-  }
-
-  updated() {
-    this._setupCardResizeObserver();
-  }
-
-  _setupCardResizeObserver() {
-    if (!this.shadowRoot) return;
-    const cardEl = this.shadowRoot.querySelector('ha-card');
-    if (!cardEl || cardEl === this._observedCardEl) return;
-
-    if (!this._cardResizeObserver) {
-      this._cardResizeObserver = new ResizeObserver((entries) => {
-        const entry = entries[0];
-        if (!entry) return;
-        const box = entry.contentBoxSize?.[0];
-        const w = Math.round(box ? box.inlineSize : entry.contentRect.width);
-        const h = Math.round(box ? box.blockSize : entry.contentRect.height);
-
-        if (this._cardBox && this._cardBox.w === w && this._cardBox.h === h) return;
-        this._cardBox = { w, h };
-        this.requestUpdate();
-      });
-    } else {
-      this._cardResizeObserver.disconnect();
-    }
-
-    this._observedCardEl = cardEl;
-    this._cardResizeObserver.observe(cardEl);
-  }
-
-  _teardownCardResizeObserver() {
-    if (this._cardResizeObserver) {
-      this._cardResizeObserver.disconnect();
-      this._cardResizeObserver = null;
-    }
-    this._observedCardEl = null;
   }
 
   setConfig(config) {
@@ -557,7 +528,6 @@ class MyDehumidifierCard extends LitElement {
     const config = this._config || {};
 
     const borderRadius = Math.max(0, toFiniteNumber(config.card_border_radius, DEFAULT_BORDER_RADIUS));
-    const glassMaxWidth = toPositiveNumber(config.glass_max_width, 1200);
     const glassAspectRatio = toPositiveNumber(config.glass_aspect_ratio, 1.7);
     const layoutBaseWidth = toPositiveNumber(config.layout_base_width, 510);
     const humPanelMax = toPositiveNumber(
@@ -591,32 +561,8 @@ class MyDehumidifierCard extends LitElement {
     const btnsBottomPx = toFiniteNumber(config.btns_bottom, -30);
     const bottomOverhangRatio = Math.max(0, -btnsBottomPx) / SCENE_REFERENCE_WIDTH;
 
-    // Ширина рамки ("скла"): рахуємо в JS з РЕАЛЬНО виміряного (ResizeObserver,
-    // див. конструктор) розміру ha-card - надійно вписує "скляну" рамку і
-    // в ширину, і у висоту одночасно, без container-type:size на .dh-frame
-    // (що на auto-висоті призводило до нульового розміру - картка зникала).
-    //
-    // Пропорція (glass_aspect_ratio, напр. 1.7) орієнтується саме на
-    // "Макс. ширину СКЛА" (glassMaxWidth) - це межа самої картки/рамки.
-    // "Макс. ширина ПРИЛАДУ" (layoutBaseWidth) - окрема, менша межа для
-    // самого осушувача всередині рамки; вона вже враховується окремо в CSS
-    // через --dh-frame-max-width у формулі .dh-device (95cqi/95cqb-кап),
-    // тож тут її НЕ застосовуємо - інакше рамка ("скло") ніколи не могла б
-    // бути ширшою за прилад, і другий/третій етап масштабування (коли
-    // прилад вже впирається в свою межу висоти, а скло продовжує
-    // звужуватися) був би неможливий.
-    let frameWidthPx = null;
-    if (this._cardBox && this._cardBox.w > 0) {
-      const { w: cardW, h: cardH } = this._cardBox;
-      const ratioNum = glassAspectRatio;
-      const usableH = cardH - padTopPx - padBottomPx;
-      const heightBasedW = usableH > 0 ? usableH * ratioNum : cardW;
-      frameWidthPx = Math.min(cardW, heightBasedW, glassMaxWidth);
-    }
-
     return {
       borderRadius,
-      glassMaxWidth,
       glassAspectRatio,
       layoutBaseWidth,
       humPanelMax,
@@ -624,9 +570,6 @@ class MyDehumidifierCard extends LitElement {
       curMax,
       frameRatioNum,
       frameRatio,
-      // До першого вимірювання ResizeObserver-ом (перший рендер) - безпечний
-      // CSS-фолбек, щоб нічого не "блимало" порожнім.
-      frameWidth: frameWidthPx !== null ? `${frameWidthPx}px` : `min(100%, ${glassMaxWidth}px)`,
       justifyContent,
       padTop: `${padTopPx}px`,
       padBottom: `${padBottomPx}px`,
@@ -690,19 +633,16 @@ class MyDehumidifierCard extends LitElement {
 
     const cardStyle = `
       --dh-card-radius: ${layout.borderRadius}px;
-      --dh-glass-max-width: ${layout.glassMaxWidth}px;
+      --dh-glass-ar-wide: ${layout.glassAspectRatio};
       --dh-justify: ${layout.justifyContent};
       --dh-frame-max-width: ${layout.layoutBaseWidth}px;
       --dh-frame-ar-num: ${layout.frameRatioNum};
       --dh-pad-top: ${layout.padTop};
       --dh-pad-bottom: ${layout.padBottom};
-      --dh-frame-width: ${layout.frameWidth};
     `;
 
     const frameStyle = `
       --dh-frame-ar: ${layout.frameRatio};
-      --dh-glass-ar: ${layout.glassAspectRatio};
-      --dh-frame-width: ${layout.frameWidth};
       --dh-hum-panel-max: ${layout.humPanelMax}px;
       --dh-controls-max: ${layout.controlsMax}px;
       --dh-cur-max: ${layout.curMax}px;
