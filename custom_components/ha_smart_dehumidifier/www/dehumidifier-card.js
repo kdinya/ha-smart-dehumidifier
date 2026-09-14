@@ -113,6 +113,16 @@ class MyDehumidifierCard extends LitElement {
       ha-card {
         aspect-ratio: var(--dh-glass-ar-wide, 1.8);
         container-type: size;
+        /* Без цього висота картки рахувалась лише з aspect-ratio і не
+           лишала місця під спейсери відступів зверху/знизу (.dh-frame-
+           top/bottom-spacer) - у горизонтальній орієнтації телефону
+           (ширина >=480px) це й обрізало пристрій. min-height рахує
+           реальну потрібну висоту (ширина рамки * її форма + відступи)
+           і не дає картці бути нижчою за цю потребу. */
+        min-height: calc(
+          min(100cqi, var(--dh-frame-max-width, 400px)) * var(--dh-frame-ar-num, 1)
+          + var(--dh-pad-top, 0px) + var(--dh-pad-bottom, 16px)
+        );
       }
 
       .dh-frame {
@@ -572,17 +582,17 @@ class MyDehumidifierCard extends LitElement {
       --dh-glass-max-width: ${layout.glassMaxWidth}px;
       --dh-glass-ar-wide: ${layout.glassRatio};
       --dh-justify: ${layout.justifyContent};
+      --dh-frame-max-width: ${layout.layoutBaseWidth}px;
+      --dh-frame-ar-num: ${layout.frameRatioNum};
+      --dh-pad-top: ${layout.padTop};
+      --dh-pad-bottom: ${layout.padBottom};
     `;
 
     const frameStyle = `
-      --dh-frame-max-width: ${layout.layoutBaseWidth}px;
-      --dh-frame-ar-num: ${layout.frameRatioNum};
       --dh-frame-ar: ${layout.frameRatio};
       --dh-hum-panel-max: ${layout.humPanelMax}px;
       --dh-controls-max: ${layout.controlsMax}px;
       --dh-cur-max: ${layout.curMax}px;
-      --dh-pad-top: ${layout.padTop};
-      --dh-pad-bottom: ${layout.padBottom};
       --dh-pad-left: ${layout.padLeft};
       --dh-pad-right: ${layout.padRight};
       --dh-offset-x: ${layout.offsetX};
