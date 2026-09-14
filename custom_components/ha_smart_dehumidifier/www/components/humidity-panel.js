@@ -315,8 +315,12 @@ export function renderHumidityPanel(card, config = {}) {
 
       .dh-auto-popup-anchor {
         position: absolute;
-        left: calc(50% + ${panelUnit(autoPopupX)} - ${panelUnit(autoPopupWidth / 2)});
+        left: 0;
+        right: 0;
         bottom: calc(100% + ${panelUnit(autoPopupY)});
+        margin-inline: auto;
+        width: ${panelUnit(autoPopupWidth)};
+        ${autoPopupX ? `transform: translateX(${panelUnit(autoPopupX)});` : ''}
         z-index: 6;
         pointer-events: none;
         overflow: visible;
@@ -332,9 +336,12 @@ export function renderHumidityPanel(card, config = {}) {
 
       .dh-cyber-toggle {
         position: absolute;
-        left: calc(50% + ${panelUnit(autoArrowX)} - ${panelUnit(autoArrowWidth / 2)});
+        left: 0;
+        right: 0;
         bottom: calc(100% + ${panelUnit(autoArrowY)});
+        margin-inline: auto;
         width: ${panelUnit(autoArrowWidth)};
+        ${autoArrowX ? `transform: translateX(${panelUnit(autoArrowX)});` : ''}
         height: ${panelUnit(autoArrowHeight)};
         min-width: ${panelUnit(autoArrowWidth)};
         min-height: ${panelUnit(autoArrowHeight)};
