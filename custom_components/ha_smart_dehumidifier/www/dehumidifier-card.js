@@ -114,26 +114,6 @@ class MyDehumidifierCard extends LitElement {
         aspect-ratio: var(--dh-glass-ar-wide, 1.8);
         container-type: size;
       }
-
-      .dh-frame {
-        /* Віднімаємо відступи зверху/знизу від доступної висоти
-           (100cqb) ДО того, як рахувати з неї дозволену ширину рамки -
-           тоді рамка сама звужується рівно стільки, щоб разом з відступами
-           вміститись у фактичну висоту ha-card (яка задається чистим
-           aspect-ratio, без окремого min-height). Старий варіант ігнорував це
-           і вимагав окремий min-height на всю висоту рамки без відступів -
-           саме це й робило картку в горизонтальній орієнтації телефона
-           (ширина картки ~480-800px) майже квадратною і обрізало її. */
-        width: min(
-          100cqi,
-          calc((100cqb - var(--dh-pad-top, 0px) - var(--dh-pad-bottom, 16px)) * var(--dh-frame-ar-num, 1)),
-          var(--dh-frame-max-width, 400px)
-        );
-      }
-
-      .dh-frame.align-left .dh-device { margin-left: 0; margin-right: auto; }
-      .dh-frame.align-center .dh-device { margin-left: auto; margin-right: auto; }
-      .dh-frame.align-right .dh-device { margin-left: auto; margin-right: 0; }
     }
 
     .dh-card-bg,
@@ -218,20 +198,42 @@ class MyDehumidifierCard extends LitElement {
     }
 
     .dh-frame {
-      width: min(100cqi, var(--dh-frame-max-width, 400px));
-      position: relative;
-      z-index: 1;
-      flex: 0 0 auto;
+      /* Верхня межа ширини - як і раніше (100% доступної ширини, але не
+         більше layout_base_width). Висота — 100% ha-card: коли ha-card має
+         фіксовану aspect-ratio (широкі екрани), це дає flexbox справжню
+         межу, від якої можна стискатись; коли висота ha-card авто (вузькі
+         екрани, мобільний портрет) - відсоток від "авто" ігнорується
+         браузером (стає auto), тож картка й далі природно підлаштовується
+         під вміст, як і раніше. align-items:center - щоб .dh-frame-aspect,
+         коли він змушений звузитися через брак висоти, лишався по центру
+         ширини рамки, а не прилипав до краю. */
+      width: min(100%, var(--dh-frame-max-width, 400px));
+      height: 100%;
+      max-height: 100%;
       display: flex;
       flex-direction: column;
+      align-items: center;
+      position: relative;
+      z-index: 1;
     }
 
     .dh-frame-aspect {
-      width: 100%;
+      /* width:auto (НЕ 100%) - принципово: разом з aspect-ratio і
+         max-width/max-height це дозволяє браузеру самому підібрати
+         найбільший розмір, що зберігає пропорцію і вписується ОБОМА
+         вимірами - як object-fit:contain, але без JS і без залежності від
+         container query одиниць (cqb), які в цьому вкладеному
+         Shadow DOM/кастомному елементі давали нестабільний результат і
+         призводили до обрізання пристрою зверху/знизу в альбомній
+         орієнтації телефона й портретній орієнтації планшета. */
+      width: auto;
+      max-width: 100%;
+      max-height: 100%;
       aspect-ratio: var(--dh-frame-ar, 1);
-      container-type: inline-size;
+      flex: 0 1 auto;
+      min-height: 0;
+      container-type: size;
       position: relative;
-      flex: 0 0 auto;
     }
 
     .dh-frame-top-spacer {
@@ -267,6 +269,10 @@ class MyDehumidifierCard extends LitElement {
       transform: translate(var(--dh-offset-x, 0px), var(--dh-offset-y, 0px));
       container-type: inline-size;
     }
+
+    .dh-frame.align-left .dh-device { margin-left: 0; margin-right: auto; }
+    .dh-frame.align-center .dh-device { margin-left: auto; margin-right: auto; }
+    .dh-frame.align-right .dh-device { margin-left: auto; margin-right: 0; }
 
     /* Вирівнювання (ліворуч/по центру/праворуч) застосовується лише на
        широких екранах (леттербоксинг для десктопу). На вузьких екранах
