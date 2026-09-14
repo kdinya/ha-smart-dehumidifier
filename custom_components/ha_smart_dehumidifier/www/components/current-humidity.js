@@ -187,12 +187,25 @@ export function renderCurrentHumidity(card, config = {}) {
       }
 
       @keyframes dh-cur-connecting-pulse {
-        0%, 100% { opacity: 0.25; }
-        50% { opacity: 1; }
+        0%, 100% { opacity: 0.25; transform: scale(0.85); }
+        50% { opacity: 1; transform: scale(1); }
+      }
+
+      .dh-cur-connecting {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        height: ${layoutUnit(curSize, layoutBaseWidth)};
+        gap: ${layoutUnit(curSize * 0.16, layoutBaseWidth)};
       }
 
       .dh-cur-connecting-dot {
         display: inline-block;
+        width: ${layoutUnit(curSize * 0.15, layoutBaseWidth)};
+        height: ${layoutUnit(curSize * 0.15, layoutBaseWidth)};
+        border-radius: 50%;
+        background: ${mainColor};
+        box-shadow: ${mainShadow};
         animation: dh-cur-connecting-pulse 1.2s ease-in-out infinite;
       }
 
@@ -217,11 +230,15 @@ export function renderCurrentHumidity(card, config = {}) {
             openMoreInfo(card, infoEntityId);
           }}
         >
-          <span class="dh-cur-int">${
-            isConnecting
-              ? html`<span class="dh-cur-connecting-dot">.</span><span class="dh-cur-connecting-dot">.</span><span class="dh-cur-connecting-dot">.</span>`
-              : value.intText
-          }</span>
+          ${isConnecting
+            ? html`
+              <span class="dh-cur-connecting" aria-hidden="true">
+                <span class="dh-cur-connecting-dot"></span>
+                <span class="dh-cur-connecting-dot"></span>
+                <span class="dh-cur-connecting-dot"></span>
+              </span>
+            `
+            : html`<span class="dh-cur-int">${value.intText}</span>`}
 
           ${curShowDecimal && value.hasDecimal
             ? html`<span class="dh-cur-dec">.${value.decText}</span>`
