@@ -18,6 +18,9 @@ import {
 const DEFAULT_BORDER_RADIUS = 28;
 const DEFAULT_HEIGHT_PERCENT = 105;
 const TICK_MS = 1000;
+// Той самий "внутрішній" масштаб, що й у _renderSceneContent() (layout_base_width: 400
+// для дуги/панелей/кнопок) - потрібен тут для компенсації зсуву нижньої панелі (див. _getLayoutData).
+const SCENE_REFERENCE_WIDTH = 400;
 const NOISE_DATA_URI = `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`;
 
 function normalizeAlign(value) {
@@ -257,6 +260,12 @@ class MyDehumidifierCard extends LitElement {
          card_height_percent, а не примусово квадратна. */
       width: min(95cqi, calc(95cqb * var(--dh-frame-ar-num, 1)), var(--dh-frame-max-width, 400px));
       aspect-ratio: var(--dh-frame-ar, 1);
+      /* Компенсація зсуву нижньої панелі кнопок (btns_bottom): якщо вона
+         виштовхнута нижче за межі самого приладу, резервуємо стільки ж
+         місця знизу через margin - тоді flex-центрування в .dh-scene
+         рахує центр уже "приладу разом із панеллю", а не лише квадрата
+         дуги, і зсув панелі більше не тягне весь прилад угору. */
+      margin-bottom: calc(var(--dh-bottom-overhang, 0) * 100cqi);
       transform: translate(var(--dh-offset-x, 0px), var(--dh-offset-y, 0px));
       container-type: inline-size;
     }
@@ -506,6 +515,18 @@ class MyDehumidifierCard extends LitElement {
     const padTopPx = toFiniteNumber(config.content_padding_top, 0);
     const padBottomPx = toFiniteNumber(config.content_padding_bottom, 0);
 
+    // Нижня панель кнопок (btns_bottom) позиціюється відносно самого
+    // приладу в тих самих "внутрішніх" одиницях, що й решта сцени
+    // (масштаб відносно SCENE_REFERENCE_WIDTH - див. _renderSceneContent).
+    // Від'ємне значення виштовхує панель НИЖЧЕ за межі приладу - тоді
+    // геометричний центр .dh-device більше не збігається з візуальним
+    // центром "приладу разом з панеллю". Компенсуємо це нижнім
+    // margin на .dh-device (тієї ж пропорції) - flex-центрування в
+    // .dh-scene тоді рахує центр уже з урахуванням цього запасу знизу,
+    // і зсув панелі більше не тягне весь прилад угору.
+    const btnsBottomPx = toFiniteNumber(config.btns_bottom, -30);
+    const bottomOverhangRatio = Math.max(0, -btnsBottomPx) / SCENE_REFERENCE_WIDTH;
+
     return {
       borderRadius,
       glassMaxWidth,
@@ -522,6 +543,7 @@ class MyDehumidifierCard extends LitElement {
       padRight: `${toFiniteNumber(config.content_padding_right, 10)}px`,
       offsetX: `${toFiniteNumber(config.device_offset_x, 0)}px`,
       offsetY: `${toFiniteNumber(config.device_offset_y, 0)}px`,
+      bottomOverhangRatio,
     };
   }
 
@@ -586,6 +608,7 @@ class MyDehumidifierCard extends LitElement {
       --dh-offset-x: ${layout.offsetX};
       --dh-offset-y: ${layout.offsetY};
       --dh-device-justify: ${layout.justifyContent};
+      --dh-bottom-overhang: ${layout.bottomOverhangRatio};
     `;
 
     return html`
