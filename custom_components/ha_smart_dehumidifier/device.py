@@ -46,8 +46,8 @@ from .const import (
     STATUS_AUTO,
     STATUS_IDLE,
     STATUS_MANUAL,
+    STATUS_MANUAL_AUTO,
     STATUS_OFF,
-    STATUS_ON,
     STATUS_PAUSE,
 )
 
@@ -232,23 +232,25 @@ class DehumidifierDevice:
         """Видимий статус пристрою.
 
         - off: вимкнено (кнопка OFF)
-        - manual: ручний режим (права кнопка), поки що працює таймер
+        - manual: ручний режим (права кнопка), вологість ще НЕ спрацювала
+          (fan_should_run тримається лише завдяки ручному таймеру)
+        - manual_auto: ручний режим і вологість вже спрацювала одночасно
         - pause: ручний режим щойно вимкнено вручну - коротка пауза перед
           тим, як знову запрацює автовизначення фізичного перемикача
-        - auto: авто-режим увімкнений і вентилятор фактично працює
-        - on: авто-режим вимкнений, пристрій увімкнено (середня кнопка),
-          вентилятор фактично працює
+        - auto: вентилятор фактично працює через вологість (гістерезис) -
+          незалежно від того, чи увімкнений перемикач авто-синхронізації
+          цілі (auto_mode)
         - idle ("очікування"): увімкнено, вентилятор не працює - вологість
-          ще не досягла цілі. Стосується як авто-, так і не-авто режиму.
+          ще не досягла цілі
         """
         if not self.is_on:
             return STATUS_OFF
         if self._pause_active:
             return STATUS_PAUSE
         if self._manual_active:
-            return STATUS_MANUAL
+            return STATUS_MANUAL_AUTO if self.auto_request else STATUS_MANUAL
         if self.auto_request:
-            return STATUS_AUTO if self.auto_mode else STATUS_ON
+            return STATUS_AUTO
         return STATUS_IDLE
 
     @property

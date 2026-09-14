@@ -15,7 +15,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import DOMAIN, STATUS_AUTO, STATUS_MANUAL, STATUS_OFF, STATUS_ON
+from .const import DOMAIN, STATUS_AUTO, STATUS_MANUAL, STATUS_MANUAL_AUTO, STATUS_OFF
 from .device import DehumidifierDevice
 
 
@@ -107,7 +107,7 @@ class DehumidifierHumidifierEntity(HumidifierEntity, RestoreEntity):
         status = self._device.status
         if status == STATUS_OFF:
             return HumidifierAction.OFF
-        if status in (STATUS_ON, STATUS_AUTO, STATUS_MANUAL):
+        if status in (STATUS_AUTO, STATUS_MANUAL, STATUS_MANUAL_AUTO):
             return HumidifierAction.DRYING
         return HumidifierAction.IDLE
 

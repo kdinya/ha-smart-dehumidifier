@@ -29,10 +29,10 @@ const STATUS_MAP = {
     color: '#ffc600',
     manualActive: true,
   },
-  on: {
-    label: 'Он',
-    color: 'var(--state-humidifier-color, #00bfff)',
-    manualActive: false,
+  manual_auto: {
+    label: 'Авто/Ручний',
+    color: '#ffc600',
+    manualActive: true,
   },
   auto: {
     label: 'Авто',
@@ -77,9 +77,10 @@ function getControlState(card, config) {
 
   return {
     mainOn: isMainEntityOn(card, config?.entity),
-    // Кнопка ON підсвічена для: он, авто, пауза, очікування - тобто для
-    // будь-якого "увімкнено", КРІМ ручного режиму (в нього своя кнопка).
-    onButtonLit: isMainEntityOn(card, config?.entity) && status.state !== 'manual',
+    // Кнопка ON підсвічена для: авто, пауза, очікування - тобто для
+    // будь-якого "увімкнено", КРІМ ручного режиму (manual/manual_auto -
+    // в нього своя кнопка).
+    onButtonLit: isMainEntityOn(card, config?.entity) && !status.manualActive,
     fanOn: isEntityOn(card, config?.fan_entity),
     manualActive: status.manualActive,
     status,
