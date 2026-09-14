@@ -113,20 +113,22 @@ class MyDehumidifierCard extends LitElement {
       ha-card {
         aspect-ratio: var(--dh-glass-ar-wide, 1.8);
         container-type: size;
-        /* Без цього висота картки рахувалась лише з aspect-ratio і не
-           лишала місця під спейсери відступів зверху/знизу (.dh-frame-
-           top/bottom-spacer) - у горизонтальній орієнтації телефону
-           (ширина >=480px) це й обрізало пристрій. min-height рахує
-           реальну потрібну висоту (ширина рамки * її форма + відступи)
-           і не дає картці бути нижчою за цю потребу. */
-        min-height: calc(
-          min(100cqi, var(--dh-frame-max-width, 400px)) * var(--dh-frame-ar-num, 1)
-          + var(--dh-pad-top, 0px) + var(--dh-pad-bottom, 16px)
-        );
       }
 
       .dh-frame {
-        width: min(100cqi, calc(100cqb * var(--dh-frame-ar-num, 1)), var(--dh-frame-max-width, 400px));
+        /* Віднімаємо відступи зверху/знизу від доступної висоти
+           (100cqb) ДО того, як рахувати з неї дозволену ширину рамки -
+           тоді рамка сама звужується рівно стільки, щоб разом з відступами
+           вміститись у фактичну висоту ha-card (яка задається чистим
+           aspect-ratio, без окремого min-height). Старий варіант ігнорував це
+           і вимагав окремий min-height на всю висоту рамки без відступів -
+           саме це й робило картку в горизонтальній орієнтації телефона
+           (ширина картки ~480-800px) майже квадратною і обрізало її. */
+        width: min(
+          100cqi,
+          calc((100cqb - var(--dh-pad-top, 0px) - var(--dh-pad-bottom, 16px)) * var(--dh-frame-ar-num, 1)),
+          var(--dh-frame-max-width, 400px)
+        );
       }
 
       .dh-frame.align-left .dh-device { margin-left: 0; margin-right: auto; }
