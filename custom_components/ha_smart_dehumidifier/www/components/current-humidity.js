@@ -219,6 +219,10 @@ export function renderCurrentHumidity(card, config = {}) {
         animation: dh-cur-connecting-pulse 1.2s ease-in-out infinite;
       }
 
+      .dh-suspended .dh-cur-connecting-dot {
+        animation-play-state: paused !important;
+      }
+
       .dh-cur-connecting-dot:nth-child(2) {
         animation-delay: 0.2s;
       }

@@ -427,15 +427,25 @@ class MyDehumidifierCard extends LitElement {
     this._isSettingsOpen = false;
     this._humPanelAutoPopupOpen = false;
     this._openSections = { auto: true, manual: false };
+
+    // Видимість картки: якщо вкладка браузера неактивна АБО картка видна
+    // менше ніж на 10% в'юпорту - призупиняємо все важке (CSS-анімації,
+    // тікер таймера, перерахунок конфігу й ререндери на кожен hass-апдейт).
+    this._suspended = false;
+    this._isIntersecting = true; // оптимістично, поки спостерігач ще не відповів
+    this._intersectionObserver = null;
+    this._visibilityChangeHandler = null;
   }
 
   connectedCallback() {
     super.connectedCallback();
     this._syncTicker();
+    this._startVisibilityWatch();
   }
 
   disconnectedCallback() {
     this._stopTicker();
+    this._stopVisibilityWatch();
     super.disconnectedCallback();
   }
 
@@ -461,9 +471,18 @@ class MyDehumidifierCard extends LitElement {
 
   set hass(hass) {
     const oldHass = this._hass;
-    const oldFanOn = this._isFanRunning(oldHass);
-
     this._hass = hass;
+
+    if (this._suspended) {
+      // Картка прихована (неактивна вкладка або видно <10% екрана) - не
+      // рахуємо конфіг, не чіпаємо тікер, не рендеримо. Просто
+      // запам'ятовуємо останній hass. Коли картка знову стане видимою,
+      // _recomputeSuspended() одразу "наздожене" актуальний стан одним
+      // рендером замість того, щоб робити це на кожен проміжний апдейт.
+      return;
+    }
+
+    const oldFanOn = this._isFanRunning(oldHass);
 
     // Підтягти сутності, які обрані під час налаштування пристрою та створені ним самим (fan_entity, status_entity тощо), коли стани вже доступні. Оновлюємо лише при реальній зміні, щоб не ломати оптимізацію ререндерів нижче.
     if (this._rawConfig) {
@@ -483,6 +502,64 @@ class MyDehumidifierCard extends LitElement {
 
   get hass() {
     return this._hass;
+  }
+
+  // ------------------------------------------------------------ видимість
+
+  _startVisibilityWatch() {
+    if (!this._visibilityChangeHandler) {
+      this._visibilityChangeHandler = () => this._recomputeSuspended();
+      document.addEventListener('visibilitychange', this._visibilityChangeHandler);
+    }
+
+    if (!this._intersectionObserver && 'IntersectionObserver' in window) {
+      this._intersectionObserver = new IntersectionObserver(
+        (entries) => {
+          const entry = entries[entries.length - 1];
+          this._isIntersecting = !!entry && entry.intersectionRatio >= 0.1;
+          this._recomputeSuspended();
+        },
+        { threshold: [0, 0.1] }
+      );
+      this._intersectionObserver.observe(this);
+    }
+
+    this._recomputeSuspended();
+  }
+
+  _stopVisibilityWatch() {
+    if (this._visibilityChangeHandler) {
+      document.removeEventListener('visibilitychange', this._visibilityChangeHandler);
+      this._visibilityChangeHandler = null;
+    }
+    if (this._intersectionObserver) {
+      this._intersectionObserver.disconnect();
+      this._intersectionObserver = null;
+    }
+  }
+
+  _recomputeSuspended() {
+    const shouldSuspend = document.hidden || !this._isIntersecting;
+    if (shouldSuspend === this._suspended) return;
+
+    this._suspended = shouldSuspend;
+
+    if (this._suspended) {
+      this._stopTicker();
+      // Один останній рендер - щоб DOM отримав клас dh-suspended і CSS
+      // (animation-play-state: paused) реально зупинив анімації. Далі, до
+      // появи картки, апдейти пропускаємо в set hass().
+      this.requestUpdate();
+    } else {
+      // Картка знову видима - наздоганяємо конфіг/тікер/рендер одним разом
+      // замість того, щоб робити це на кожен пропущений hass-апдейт.
+      if (this._rawConfig) {
+        this._config = deriveConfig(this._rawConfig, this._hass);
+        this._trackedEntityIds = extractTrackedEntities(this._config || {});
+      }
+      this._syncTicker();
+      this.requestUpdate();
+    }
   }
 
   updated(changedProps) {
@@ -512,7 +589,7 @@ class MyDehumidifierCard extends LitElement {
   }
 
   _shouldRunTicker() {
-    return this.isConnected && this._isFanRunning();
+    return this.isConnected && !this._suspended && this._isFanRunning();
   }
 
   _syncTicker() {
@@ -699,7 +776,7 @@ class MyDehumidifierCard extends LitElement {
     `;
 
     return html`
-      <ha-card style="${cardStyle}">
+      <ha-card style="${cardStyle}" class="${this._suspended ? 'dh-suspended' : ''}">
         <div class="dh-card-bg" aria-hidden="true">
           <div class="dh-card-bg__base"></div>
           <div class="dh-card-bg__vignette"></div>

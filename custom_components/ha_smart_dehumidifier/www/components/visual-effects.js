@@ -88,11 +88,15 @@ export function renderVisualEffects(card, config = {}) {
 
       .is-dragging .efx-bg-fan,
       .is-dragging .efx-comet-tail,
-      .is-dragging .efx-particle {
+      .is-dragging .efx-particle,
+      .dh-suspended .efx-bg-fan,
+      .dh-suspended .efx-comet-tail,
+      .dh-suspended .efx-particle {
         animation-play-state: paused !important;
       }
 
-      .is-dragging .efx-particles {
+      .is-dragging .efx-particles,
+      .dh-suspended .efx-particles {
         opacity: 0 !important;
         transition: opacity 0.1s ease;
       }

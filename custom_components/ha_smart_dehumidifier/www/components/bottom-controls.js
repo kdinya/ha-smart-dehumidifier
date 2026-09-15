@@ -345,6 +345,10 @@ export function renderBottomControls(card, config = {}) {
         filter: drop-shadow(0 0 5px ${btnOnColor});
       }
 
+      .dh-suspended .dh-icon-spin {
+        animation-play-state: paused !important;
+      }
+
       .dh-status-badge {
         width: ${badgeWidth}%;
         height: ${layoutUnit(badgeHeight, layoutBaseWidth)};
