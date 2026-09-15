@@ -48,10 +48,6 @@ export function renderVisualEffects(card, config = {}) {
   const cometSize = toPositiveNumber(config.efx_comet_size, 350);
   const cometDur = speedToDuration(toFiniteNumber(config.efx_comet_speed, 83));
 
-  const showCore = config.efx_core_show ?? false;
-  const coreSize = toPositiveNumber(config.efx_core_size, 200);
-  const coreDur = speedToDuration(toFiniteNumber(config.efx_core_speed, 74));
-
   const showParts = config.efx_part_show ?? false;
   const numParts = Math.round(clamp(toFiniteNumber(config.efx_part_count, 55), 5, 100));
   const partSpread = toPositiveNumber(config.efx_part_spread, 400);
@@ -67,7 +63,6 @@ export function renderVisualEffects(card, config = {}) {
   const particleSizeCss = layoutUnit(3, layoutBaseWidth);
   const fanSizeCss = layoutUnit(fanSize, layoutBaseWidth);
   const cometSizeCss = layoutUnit(cometSize, layoutBaseWidth);
-  const coreSizeCss = layoutUnit(coreSize, layoutBaseWidth);
   const offsetYCss = layoutUnit(offsetY, layoutBaseWidth);
 
   const isDragging = !!card._dragging;
@@ -93,14 +88,11 @@ export function renderVisualEffects(card, config = {}) {
 
       .is-dragging .efx-bg-fan,
       .is-dragging .efx-comet-tail,
-      .is-dragging .efx-core-ring,
-      .is-dragging .efx-core-glow,
       .is-dragging .efx-particle {
         animation-play-state: paused !important;
       }
 
-      .is-dragging .efx-particles,
-      .is-dragging .efx-core-glow {
+      .is-dragging .efx-particles {
         opacity: 0 !important;
         transition: opacity 0.1s ease;
       }
@@ -142,33 +134,6 @@ export function renderVisualEffects(card, config = {}) {
         animation: efx-rotate ${cometDur}s linear infinite;
       }
 
-      .efx-energy-core {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        display: ${showCore ? 'block' : 'none'};
-        width: ${coreSizeCss};
-        height: ${coreSizeCss};
-        transform: translate(-50%, -50%);
-      }
-
-      .efx-core-ring {
-        position: absolute;
-        inset: 0;
-        border-radius: 50%;
-        border: 1px solid transparent;
-        border-top-color: ${color}66;
-        animation: efx-rotate ${coreDur}s linear infinite;
-      }
-
-      .efx-core-glow {
-        position: absolute;
-        inset: -20px;
-        background: radial-gradient(circle, ${color}33 0%, transparent 60%);
-        animation: efx-pulse ${coreDur}s ease-in-out infinite alternate;
-        transition: opacity 0.4s ease;
-      }
-
       .efx-particles {
         position: absolute;
         inset: 0;
@@ -197,11 +162,6 @@ export function renderVisualEffects(card, config = {}) {
         100% { transform: rotate(360deg); }
       }
 
-      @keyframes efx-pulse {
-        0% { transform: scale(0.9); opacity: 0.5; }
-        100% { transform: scale(1.2); opacity: 1; }
-      }
-
       @keyframes efx-particle-fly {
         0% {
           transform: translate(-50%, -50%) scale(0.1);
@@ -226,11 +186,6 @@ export function renderVisualEffects(card, config = {}) {
 
         <div class="efx-comet-orbit">
           <div class="efx-comet-tail"></div>
-        </div>
-
-        <div class="efx-energy-core">
-          <div class="efx-core-glow"></div>
-          <div class="efx-core-ring"></div>
         </div>
 
         <div class="efx-particles">
