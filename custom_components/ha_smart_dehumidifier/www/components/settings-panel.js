@@ -1,6 +1,6 @@
 import { html } from '../files/lit-proxy.js';
 import { clamp } from '../dh-utils.js';
-import { t, LANGUAGES, getLanguage } from '../i18n.js';
+import { t, LANGUAGES, getLanguage, LANGUAGE_CHANGE_EVENT } from '../i18n.js';
 
 export function renderSettingsPanel(card, config) {
   if (!card._isSettingsOpen) return html``;
@@ -23,6 +23,14 @@ export function renderSettingsPanel(card, config) {
       })
     );
     card.requestUpdate();
+    // Візуальний редактор (dehumidifier-editor.js) - окремий елемент зі
+    // своїм власним _config, тож просте config-changed із прев'ю-картки
+    // до нього не доходить (діалог HA слухає ці події від самого
+    // редактора, а не від прев'ю). Глобальна подія на window дозволяє
+    // йому миттєво підхопити нову мову в усіх вкладках одразу.
+    window.dispatchEvent(
+      new CustomEvent(LANGUAGE_CHANGE_EVENT, { detail: { language: lang } })
+    );
   };
 
   const getVal = (id, def) => (hass.states[id] ? Number(hass.states[id].state) : def);

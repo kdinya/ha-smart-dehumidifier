@@ -1,6 +1,6 @@
 import { html, css, LitElement } from './files/lit-proxy.js';
 import { EDITOR_SCHEMA } from './visual-editor-config.js';
-import { t } from './i18n.js';
+import { t, getLanguage, LANGUAGE_CHANGE_EVENT } from './i18n.js';
 import { clamp } from './dh-utils.js';
 
 const STORAGE_KEY = 'dh-editor-open-sections-v2';
@@ -344,6 +344,32 @@ class DehumidifierEditor extends LitElement {
     this._config = {};
     this._openSections = buildInitialSections();
     this._drafts = {};
+    // Прив'язуємо один раз - щоб знімати РІВНО той самий слухач у
+    // disconnectedCallback (бо кожен .bind() створював би нову функцію).
+    this._onLanguageChanged = this._onLanguageChanged.bind(this);
+  }
+
+  connectedCallback() {
+    super.connectedCallback();
+    window.addEventListener(LANGUAGE_CHANGE_EVENT, this._onLanguageChanged);
+  }
+
+  disconnectedCallback() {
+    window.removeEventListener(LANGUAGE_CHANGE_EVENT, this._onLanguageChanged);
+    super.disconnectedCallback();
+  }
+
+  // Мову змінюють у спливаючому вікні шестерні на прев'ю-картці - вона
+  // окремий елемент зі своїм власним _config, тож про зміну дізнаємось
+  // через глобальну подію (див. i18n.js), а не через звичайний потік
+  // config -> setConfig(). Одразу оновлюємо власний _config (миттєвий
+  // переклад в усіх вкладках) і через _emitConfig() штатно повідомляємо
+  // діалог HA - так само, якби мову змінили прямо в редакторі.
+  _onLanguageChanged(e) {
+    const language = e?.detail?.language;
+    if (language !== 'en' && language !== 'uk') return;
+    if (language === getLanguage(this._config)) return;
+    this._emitConfig({ ...this._config, language });
   }
 
   setConfig(config) {
