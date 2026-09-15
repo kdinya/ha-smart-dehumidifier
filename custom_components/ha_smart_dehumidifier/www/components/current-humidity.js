@@ -74,7 +74,9 @@ export function renderCurrentHumidity(card, config = {}) {
   const value = splitHumidity(currentHumidity);
   const infoEntityId = getHumidityInfoEntity(config);
 
-  const curFontFamily = config.cur_font_family ?? "'7segment', monospace";
+  // Семисегментний шрифт — єдиний і незмінний для поточної вологості
+  // (вибір шрифту прибрано з візуального редактора).
+  const curFontFamily = "'7segment', monospace";
 
   const curSize = toFiniteNumber(config.cur_size, 140);
   const curDecSize = toFiniteNumber(config.cur_dec_size, 100);
