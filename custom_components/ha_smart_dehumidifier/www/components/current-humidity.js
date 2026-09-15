@@ -6,7 +6,6 @@ import {
   isMainEntityOn,
   readCurrentHumidity,
   getLayoutBaseWidth,
-  isConnectingStatus,
 } from '../dh-utils.js';
 
 // Глобальне завантаження локального шрифту (обхід ізоляції Shadow DOM).
@@ -36,9 +35,6 @@ if (!document.getElementById('dh-local-7seg-font')) {
 const DEFAULT_HUMIDITY = 50;
 
 function splitHumidity(value) {
-  if (value === null || value === undefined) {
-    return { intText: '--', decText: '0', hasDecimal: false, isReady: false };
-  }
   const rounded = Math.round(toFiniteNumber(value, DEFAULT_HUMIDITY) * 10);
   const intPart = Math.trunc(rounded / 10);
   const decPart = Math.abs(rounded % 10);
@@ -47,7 +43,6 @@ function splitHumidity(value) {
     intText: String(intPart),
     decText: String(decPart),
     hasDecimal: decPart !== 0,
-    isReady: true,
   };
 }
 
@@ -79,7 +74,13 @@ export function renderCurrentHumidity(card, config = {}) {
 
   const isOn = isMainEntityOn(card, config.entity);
   const currentHumidity = readCurrentHumidity(card, config);
-  const value = splitHumidity(currentHumidity);
+  // Крапки завантаження показуємо ЗАВЖДИ, коли датчика поточної вологості
+  // ще немає (currentHumidity === null) - незалежно від того, який зараз
+  // режим/статус (manual/pause теж можуть бути активні одночасно з тим,
+  // що сам датчик вологості ще не віддав перше значення). Ніяких "--"
+  // більше немає в коді зовсім.
+  const isConnecting = currentHumidity === null;
+  const value = isConnecting ? null : splitHumidity(currentHumidity);
   const infoEntityId = getHumidityInfoEntity(config);
 
   // Семисегментний шрифт — єдиний і незмінний для поточної вологості
@@ -119,12 +120,6 @@ export function renderCurrentHumidity(card, config = {}) {
   const unitColor = isOn ? curUnitColorOn : curUnitColorOff;
   const mainShadow = isOn ? curGlowOn : 'none';
   const unitShadow = isOn ? '0 0 10px rgba(255,255,255,0.15)' : 'none';
-
-  // Поки датчик вологості ще не віддав перше значення (статус
-  // "Підключення") — замість статичних "--" показуємо два сегменти
-  // того самого шрифта, які по черзі "блимають", ніби індикатор іде
-  // вимірювання (як на цифровому приладі одразу після ввімкнення).
-  const isConnecting = !value.isReady && isConnectingStatus(card, config);
 
   return html`
     <style>
@@ -254,11 +249,11 @@ export function renderCurrentHumidity(card, config = {}) {
             `
             : html`<span class="dh-cur-int">${value.intText}</span>`}
 
-          ${curShowDecimal && value.hasDecimal
+          ${!isConnecting && curShowDecimal && value.hasDecimal
             ? html`<span class="dh-cur-dec">.${value.decText}</span>`
             : html``}
 
-          ${curShowUnit && value.isReady
+          ${!isConnecting && curShowUnit
             ? html`<span class="dh-cur-unit">%</span>`
             : html``}
         </button>
