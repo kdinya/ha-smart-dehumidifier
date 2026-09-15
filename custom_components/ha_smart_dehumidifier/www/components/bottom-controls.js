@@ -227,6 +227,19 @@ export function renderBottomControls(card, config = {}) {
       .dh-hill-group {
         width: 100%;
         height: ${btnHeightCss};
+        /* Висота кнопкового блоку (btn_height) - основна, як і раніше. Але
+           якщо налаштована висота бейджа (badge_height) разом з іконкою
+           центральної кнопки не поміщається в цю висоту - min-height
+           підіймає блок рівно настільки, щоб бейдж більше не обрізався
+           через overflow:hidden нижче (потрібен для заокруглених країв
+           кнопок-"пігулок" - його не прибираємо). При типових/дефолтних
+           значеннях (badge_height=22) ця межа менша за btn_height і
+           жодного ефекту не дає - вигляд кнопок не змінюється. */
+        min-height: calc(
+          ${layoutUnit(badgeHeight, layoutBaseWidth)} +
+          ${layoutUnit(btnIconSize, layoutBaseWidth)} +
+          ${layoutUnit(13, layoutBaseWidth)}
+        );
         display: flex;
         box-sizing: border-box;
         overflow: hidden;

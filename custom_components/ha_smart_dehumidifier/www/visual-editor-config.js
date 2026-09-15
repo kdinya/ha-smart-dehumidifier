@@ -116,15 +116,15 @@ export const EDITOR_SCHEMA = [
     num('badge_radius', 'Заокруглення бейджа', 0, 30, 6, 1),
     num('badge_size', 'Розмір тексту бейджа', 4, 30, 13, 0.5),
     num('badge_font_weight', 'Жирність тексту бейджа', 100, 900, 900, 100),
-    txt('btn_off_label', 'Підпис OFF', 'OFF'),
-    txt('btn_on_label', 'Підпис ON', 'ON'),
-    txt('btn_manual_label', 'Підпис MANUAL', 'MANUAL'),
-    txt('btn_off_icon', 'Іконка OFF', 'mdi:power-cycle'),
-    txt('btn_on_icon', 'Іконка ON', 'mdi:fan'),
-    txt('btn_manual_icon', 'Іконка MANUAL', 'mdi:gesture-tap'),
+    num('badge_offset_y', 'Положення бейджа по вертикалі Y', -100, 100, 0, 1),
     // Кольори кнопок та бейджа видалено
     num('btns_bottom', 'Положення блоку по вертикалі Y', -100, 300, -30, 1),
-    num('badge_offset_y', 'Положення бейджа по вертикалі Y', -100, 100, 0, 1),
+    txt('btn_off_label', 'Підпис OFF', 'OFF'),
+    txt('btn_off_icon', 'Іконка OFF', 'mdi:power-cycle'),
+    txt('btn_on_label', 'Підпис ON', 'ON'),
+    txt('btn_on_icon', 'Іконка ON', 'mdi:fan'),
+    txt('btn_manual_label', 'Підпис MANUAL', 'MANUAL'),
+    txt('btn_manual_icon', 'Іконка MANUAL', 'mdi:gesture-tap'),
   ]),
 
   section('effects', '✨', 'Візуальні ефекти', [
