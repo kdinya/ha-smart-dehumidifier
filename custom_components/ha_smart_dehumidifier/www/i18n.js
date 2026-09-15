@@ -20,10 +20,37 @@ export const LANGUAGES = [
 // а не лише в момент наступного власного setConfig() від діалогу HA.
 export const LANGUAGE_CHANGE_EVENT = 'dh-language-changed';
 
+// Мова також дублюється в localStorage. Причина: спливаюче вікно шестерні
+// живе на ПРЕВ'Ю-картці, а не в редакторі - card.setConfig()/config-changed
+// звідти оновлюють лише живий стан цього одного інстансу; сам HA Lovelace
+// ніяк не зобов'язаний зберегти цю зміну у своєму збереженому конфігу і
+// регулярно перезастосовує ЗБЕРЕЖЕНИЙ (ще без мови) конфіг картки при
+// будь-якому пересинхроні дашборду чи перезавантаженні сторінки - вибір
+// мови без цього губився б. localStorage переживає обидва випадки.
+const STORAGE_KEY = 'dh-card-language';
+
+function readStoredLanguage() {
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    return raw === 'en' || raw === 'uk' ? raw : null;
+  } catch (_e) {
+    return null;
+  }
+}
+
+export function writeStoredLanguage(lang) {
+  if (lang !== 'en' && lang !== 'uk') return;
+  try {
+    window.localStorage.setItem(STORAGE_KEY, lang);
+  } catch (_e) {
+    // ignore
+  }
+}
+
 export function getLanguage(config = {}) {
   const lang = config?.language;
   if (lang === 'en' || lang === 'uk') return lang;
-  return DEFAULT_LANGUAGE;
+  return readStoredLanguage() || DEFAULT_LANGUAGE;
 }
 
 const EN = {

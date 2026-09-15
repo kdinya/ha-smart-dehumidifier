@@ -1,6 +1,6 @@
 import { html } from '../files/lit-proxy.js';
 import { clamp } from '../dh-utils.js';
-import { t, LANGUAGES, getLanguage, LANGUAGE_CHANGE_EVENT } from '../i18n.js';
+import { t, LANGUAGES, getLanguage, LANGUAGE_CHANGE_EVENT, writeStoredLanguage } from '../i18n.js';
 
 export function renderSettingsPanel(card, config) {
   if (!card._isSettingsOpen) return html``;
@@ -13,6 +13,12 @@ export function renderSettingsPanel(card, config) {
 
   const setLanguage = (lang) => {
     if (lang === currentLanguage) return;
+    // localStorage - головне надійне сховище (переживає перезастосування
+    // збереженого конфігу картки Lovelace-ом і перезавантаження сторінки,
+    // на відміну від config-changed із прев'ю-картки, який HA не
+    // зобов'язаний зберегти). config.language лишаємо теж - якщо картку
+    // редагують в діалозі, зміна так само коректно долітає до YAML.
+    writeStoredLanguage(lang);
     const next = { ...(card._rawConfig || config), language: lang };
     card.setConfig(next);
     card.dispatchEvent(
