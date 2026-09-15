@@ -1,11 +1,29 @@
 import { html } from '../files/lit-proxy.js';
 import { clamp } from '../dh-utils.js';
+import { t, LANGUAGES, getLanguage } from '../i18n.js';
 
 export function renderSettingsPanel(card, config) {
   if (!card._isSettingsOpen) return html``;
 
   const hass = card._hass;
   if (!hass) return html``;
+
+  const tr = (ukText) => t(config, ukText);
+  const currentLanguage = getLanguage(config);
+
+  const setLanguage = (lang) => {
+    if (lang === currentLanguage) return;
+    const next = { ...(card._rawConfig || config), language: lang };
+    card.setConfig(next);
+    card.dispatchEvent(
+      new CustomEvent('config-changed', {
+        detail: { config: next },
+        bubbles: true,
+        composed: true,
+      })
+    );
+    card.requestUpdate();
+  };
 
   const getVal = (id, def) => (hass.states[id] ? Number(hass.states[id].state) : def);
 
@@ -242,6 +260,10 @@ export function renderSettingsPanel(card, config) {
       .sp-slider::-moz-range-thumb { width: 16px; height: 16px; border-radius: 6px; background: #00d4ff; border: 2px solid rgba(10, 14, 20, 0.9); box-shadow: 0 0 10px rgba(0, 212, 255, 0.5); }
       .manual .sp-slider::-moz-range-thumb { background: #ffc600; box-shadow: 0 0 10px rgba(255, 198, 0, 0.5); }
       .sp-divider { height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent); margin: 0 -2px; flex-shrink: 0; }
+      .sp-lang-row { display: flex; gap: 8px; }
+      .sp-lang-btn { flex: 1 1 0; padding: 10px 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.09); background: rgba(255,255,255,0.03); color: rgba(255,255,255,0.6); font-size: 12px; font-weight: 700; letter-spacing: 0.2px; cursor: pointer; transition: background 0.15s, border-color 0.15s, color 0.15s; }
+      .sp-lang-btn:hover { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.85); }
+      .sp-lang-btn.is-active { background: rgba(0, 212, 255, 0.12); border-color: rgba(0, 212, 255, 0.35); color: #00d4ff; }
     </style>
 
     <div class="sp-overlay" @click=${close}>
@@ -249,7 +271,7 @@ export function renderSettingsPanel(card, config) {
         <div class="sp-header">
           <div class="sp-title">
             <span class="sp-title-dot"></span>
-            Налаштування
+            ${tr('Налаштування')}
           </div>
           <button class="sp-close" @click=${close}>
             <ha-icon icon="mdi:close"></ha-icon>
@@ -261,7 +283,7 @@ export function renderSettingsPanel(card, config) {
             <button class="sp-head" @click=${() => toggleSection('auto')}>
               <div class="sp-head-left">
                 <div class="sp-icon-wrap"><ha-icon icon="mdi:tune-variant"></ha-icon></div>
-                <span class="sp-head-label">Авто-режим</span>
+                <span class="sp-head-label">${tr('Авто-режим')}</span>
               </div>
               <ha-icon class="sp-chevron" icon="mdi:chevron-down"></ha-icon>
             </button>
@@ -270,8 +292,8 @@ export function renderSettingsPanel(card, config) {
               <div class="sp-body">
                 <div class="sp-hud">
                   <div class="sp-hud-meta">
-                    <span class="sp-hud-label">Рекомендація</span>
-                    <span class="sp-hud-sub">розраховано автоматично</span>
+                    <span class="sp-hud-label">${tr('Рекомендація')}</span>
+                    <span class="sp-hud-sub">${tr('розраховано автоматично')}</span>
                   </div>
                   <span class="sp-hud-val">${vals.recommended}%</span>
                 </div>
@@ -280,7 +302,7 @@ export function renderSettingsPanel(card, config) {
 
                 <div class="sp-row">
                   <div class="sp-label-line">
-                    <span class="sp-label">Дельта${isAbsoluteDelta ? ' (абс. вологість)' : ''}</span>
+                    <span class="sp-label">${tr('Дельта')}${isAbsoluteDelta ? tr(' (абс. вологість)') : ''}</span>
                     <span class="sp-val">${formatSliderValue(vals.delta, 0.1)}${deltaUnit}</span>
                   </div>
                   <div class="sp-slider-wrap" @pointerdown=${(e) => startIntentDrag(e, entities.delta, deltaUnit, 0.1, 10, 0.1)} @pointermove=${moveIntentDrag} @pointerup=${endIntentDrag} @pointercancel=${cancelIntentDrag} @click=${blockTapChange}>
@@ -290,7 +312,7 @@ export function renderSettingsPanel(card, config) {
 
                 <div class="sp-row">
                   <div class="sp-label-line">
-                    <span class="sp-label">Min ліміт</span>
+                    <span class="sp-label">${tr('Min ліміт')}</span>
                     <span class="sp-val">${formatSliderValue(vals.min, 1)}%</span>
                   </div>
                   <div class="sp-slider-wrap" @pointerdown=${(e) => startIntentDrag(e, entities.min, '%', 30, 100, 1)} @pointermove=${moveIntentDrag} @pointerup=${endIntentDrag} @pointercancel=${cancelIntentDrag} @click=${blockTapChange}>
@@ -300,7 +322,7 @@ export function renderSettingsPanel(card, config) {
 
                 <div class="sp-row">
                   <div class="sp-label-line">
-                    <span class="sp-label">Max ліміт</span>
+                    <span class="sp-label">${tr('Max ліміт')}</span>
                     <span class="sp-val">${formatSliderValue(vals.max, 1)}%</span>
                   </div>
                   <div class="sp-slider-wrap" @pointerdown=${(e) => startIntentDrag(e, entities.max, '%', 30, 100, 1)} @pointermove=${moveIntentDrag} @pointerup=${endIntentDrag} @pointercancel=${cancelIntentDrag} @click=${blockTapChange}>
@@ -315,7 +337,7 @@ export function renderSettingsPanel(card, config) {
             <button class="sp-head" @click=${() => toggleSection('manual')}>
               <div class="sp-head-left">
                 <div class="sp-icon-wrap"><ha-icon icon="mdi:timer-sand-complete"></ha-icon></div>
-                <span class="sp-head-label">Таймери</span>
+                <span class="sp-head-label">${tr('Таймери')}</span>
               </div>
               <ha-icon class="sp-chevron" icon="mdi:chevron-down"></ha-icon>
             </button>
@@ -324,22 +346,47 @@ export function renderSettingsPanel(card, config) {
               <div class="sp-body">
                 <div class="sp-row">
                   <div class="sp-label-line">
-                    <span class="sp-label">Ручний режим</span>
-                    <span class="sp-val">${formatSliderValue(vals.runtime, 1)} хв</span>
+                    <span class="sp-label">${tr('Ручний режим')}</span>
+                    <span class="sp-val">${formatSliderValue(vals.runtime, 1)}${tr(' хв')}</span>
                   </div>
-                  <div class="sp-slider-wrap" @pointerdown=${(e) => startIntentDrag(e, entities.runtime, ' хв', 1, 120, 1)} @pointermove=${moveIntentDrag} @pointerup=${endIntentDrag} @pointercancel=${cancelIntentDrag} @click=${blockTapChange}>
+                  <div class="sp-slider-wrap" @pointerdown=${(e) => startIntentDrag(e, entities.runtime, tr(' хв'), 1, 120, 1)} @pointermove=${moveIntentDrag} @pointerup=${endIntentDrag} @pointercancel=${cancelIntentDrag} @click=${blockTapChange}>
                     <input class="sp-slider" type="range" min="1" max="120" step="1" .value=${String(vals.runtime)} tabindex="-1" disabled>
                   </div>
                 </div>
 
                 <div class="sp-row">
                   <div class="sp-label-line">
-                    <span class="sp-label">Пауза</span>
-                    <span class="sp-val">${formatSliderValue(vals.pause, 1)} хв</span>
+                    <span class="sp-label">${tr('Пауза')}</span>
+                    <span class="sp-val">${formatSliderValue(vals.pause, 1)}${tr(' хв')}</span>
                   </div>
-                  <div class="sp-slider-wrap" @pointerdown=${(e) => startIntentDrag(e, entities.pause, ' хв', 1, 120, 1)} @pointermove=${moveIntentDrag} @pointerup=${endIntentDrag} @pointercancel=${cancelIntentDrag} @click=${blockTapChange}>
+                  <div class="sp-slider-wrap" @pointerdown=${(e) => startIntentDrag(e, entities.pause, tr(' хв'), 1, 120, 1)} @pointermove=${moveIntentDrag} @pointerup=${endIntentDrag} @pointercancel=${cancelIntentDrag} @click=${blockTapChange}>
                     <input class="sp-slider" type="range" min="1" max="120" step="1" .value=${String(vals.pause)} tabindex="-1" disabled>
                   </div>
+                </div>
+              </div>
+            ` : html``}
+          </div>
+          <div class="sp-panel ${card._openSections.language ? 'is-open' : ''}">
+            <button class="sp-head" @click=${() => toggleSection('language')}>
+              <div class="sp-head-left">
+                <div class="sp-icon-wrap"><ha-icon icon="mdi:translate"></ha-icon></div>
+                <span class="sp-head-label">${tr('Мова')}</span>
+              </div>
+              <ha-icon class="sp-chevron" icon="mdi:chevron-down"></ha-icon>
+            </button>
+
+            ${card._openSections.language ? html`
+              <div class="sp-body">
+                <div class="sp-lang-row">
+                  ${LANGUAGES.map((lng) => html`
+                    <button
+                      class="sp-lang-btn ${currentLanguage === lng.value ? 'is-active' : ''}"
+                      type="button"
+                      @click=${() => setLanguage(lng.value)}
+                    >
+                      ${lng.label}
+                    </button>
+                  `)}
                 </div>
               </div>
             ` : html``}

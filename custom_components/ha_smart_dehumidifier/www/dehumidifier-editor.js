@@ -1,5 +1,6 @@
 import { html, css, LitElement } from './files/lit-proxy.js';
 import { EDITOR_SCHEMA } from './visual-editor-config.js';
+import { t } from './i18n.js';
 import { clamp } from './dh-utils.js';
 
 const STORAGE_KEY = 'dh-editor-open-sections-v2';
@@ -350,6 +351,11 @@ class DehumidifierEditor extends LitElement {
     this._openSections = buildInitialSections(this._openSections);
   }
 
+  // Переклад рядка з урахуванням поточної мови картки (config.language).
+  _t(ukText) {
+    return t(this._config, ukText);
+  }
+
   _fieldValue(field) {
     const value = this._config?.[field.key];
     return value !== undefined ? value : field.default;
@@ -439,7 +445,7 @@ class DehumidifierEditor extends LitElement {
     if (!hasOverride) return html``;
 
     return html`
-      <button class="field-reset" type="button" @click=${() => this._resetField(field)} title="Скинути до стандартного">
+      <button class="field-reset" type="button" @click=${() => this._resetField(field)} title="${this._t('Скинути до стандартного')}">
         ↺
       </button>
     `;
@@ -451,7 +457,7 @@ class DehumidifierEditor extends LitElement {
     return html`
       <div class="field">
         <div class="toggle-row">
-          <div class="field-label">${field.label}</div>
+          <div class="field-label">${this._t(field.label)}</div>
           <label class="switch">
             <input
               type="checkbox"
@@ -471,7 +477,7 @@ class DehumidifierEditor extends LitElement {
     return html`
       <div class="field">
         <div class="field-head">
-          <div class="field-label">${field.label}</div>
+          <div class="field-label">${this._t(field.label)}</div>
           ${this._renderReset(field)}
         </div>
 
@@ -481,7 +487,7 @@ class DehumidifierEditor extends LitElement {
           @change=${(e) => this._setValue(field, e.target.value)}
         >
           ${(field.options || []).map((o) => html`
-            <option value=${o.value}>${o.label}</option>
+            <option value=${o.value}>${this._t(o.label)}</option>
           `)}
         </select>
       </div>
@@ -494,7 +500,7 @@ class DehumidifierEditor extends LitElement {
     return html`
       <div class="field">
         <div class="field-head">
-          <div class="field-label">${field.label}</div>
+          <div class="field-label">${this._t(field.label)}</div>
           ${this._renderReset(field)}
         </div>
 
@@ -519,7 +525,7 @@ class DehumidifierEditor extends LitElement {
     return html`
       <div class="field">
         <div class="field-head">
-          <div class="field-label">${field.label}</div>
+          <div class="field-label">${this._t(field.label)}</div>
           ${this._renderReset(field)}
         </div>
 
@@ -554,7 +560,7 @@ class DehumidifierEditor extends LitElement {
     return html`
       <div class="field">
         <div class="field-head">
-          <div class="field-label">${field.label}</div>
+          <div class="field-label">${this._t(field.label)}</div>
           ${this._renderReset(field)}
         </div>
 
@@ -601,7 +607,7 @@ class DehumidifierEditor extends LitElement {
                 @click=${() => this._toggleSection(section.id)}
               >
                 <span class="section-emoji">${section.em}</span>
-                <span class="section-title">${section.title}</span>
+                <span class="section-title">${this._t(section.title)}</span>
                 <span class="section-arrow ${isOpen ? 'open' : ''}">▼</span>
               </button>
 
@@ -609,11 +615,7 @@ class DehumidifierEditor extends LitElement {
                 ${isDisabled
                   ? html`
                     <div class="section-note">
-                      Автоматична вологість недоступна: у налаштуваннях пристрою
-                      (Settings → Devices &amp; services → HA Smart Dehumidifier)
-                      не вказано датчик вологості сусідньої кімнати. Без нього
-                      осушувач працює лише за вручну заданою цільовою вологістю
-                      та гістерезисом.
+                      ${this._t('Автоматична вологість недоступна: у налаштуваннях пристрою (Settings → Devices & services → HA Smart Dehumidifier) не вказано датчик вологості сусідньої кімнати. Без нього осушувач працює лише за вручну заданою цільовою вологістю та гістерезисом.')}
                     </div>
                   `
                   : html`
