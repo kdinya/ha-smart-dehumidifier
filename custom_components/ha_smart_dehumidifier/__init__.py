@@ -54,7 +54,7 @@ def _cache_busted_card_js_url(www_path: str) -> str:
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     """Register the bundled Lovelace card so it loads without a manual resource."""
     www_path = hass.config.path("custom_components", DOMAIN, "www")
-    card_js_url = _cache_busted_card_js_url(www_path)
+    card_js_url = await hass.async_add_executor_job(_cache_busted_card_js_url, www_path)
 
     registered = False
     try:
